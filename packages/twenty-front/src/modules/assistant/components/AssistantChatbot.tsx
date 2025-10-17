@@ -33,6 +33,7 @@ const StyledMessageContent = styled.div<{ role: 'user' | 'assistant' }>`
   max-width: 80%;
   padding: 12px 16px;
   border-radius: 12px;
+  white-space: pre-wrap;
   ${({ theme, role }) => role === 'user' ? `
     background: ${theme.color.blue};
     color: white;
@@ -41,39 +42,12 @@ const StyledMessageContent = styled.div<{ role: 'user' | 'assistant' }>`
     color: ${theme.font.color.primary};
     border: 1px solid ${theme.border.color.medium};
   `}
-
-  p {
-    margin: 0;
-    line-height: 1.5;
-  }
-
-  code {
-    background: ${({ theme }) => theme.background.tertiary};
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: 'Monaco', 'Menlo', monospace;
-    font-size: 13px;
-  }
-
-  pre {
-    background: ${({ theme }) => theme.background.tertiary};
-    padding: 12px;
-    border-radius: 8px;
-    overflow-x: auto;
-
-    code {
-      background: transparent;
-      padding: 0;
-    }
-  }
 `;
 
 const StyledMessageHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
   font-size: 12px;
   color: ${({ theme }) => theme.font.color.tertiary};
+  padding: 0 4px;
 `;
 
 const StyledInputWrapper = styled.div`
@@ -161,7 +135,7 @@ const StyledSendButton = styled.button<{ disabled: boolean }>`
 const StyledLoadingDots = styled.div`
   display: flex;
   gap: 4px;
-  padding: 12px 16px;
+  padding: 12px 0;
 
   span {
     width: 8px;
@@ -214,43 +188,29 @@ export const AssistantChatbot = () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
-    const userMessageId = Date.now().toString();
     setInput('');
     setIsLoading(true);
 
     // Add user message
-    const newUserMessage: Message = { id: userMessageId, role: 'user', content: userMessage };
+    const newUserMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: userMessage
+    };
     setMessages(prev => [...prev, newUserMessage]);
 
     try {
-      const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-
-      if (!apiKey) {
-        throw new Error('API key not configured');
-      }
-
-      // Create assistant message for streaming
-      const assistantMessageId = (Date.now() + 1).toString();
-      const assistantMessage: Message = { id: assistantMessageId, role: 'assistant', content: '' };
-      setMessages(prev => [...prev, assistantMessage]);
-
-      // Call Anthropic Streaming API
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      // Call backend API
+      const response = await fetch('http://localhost:3002/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 2048,
-          messages: [
-            ...messages.map(m => ({ role: m.role, content: m.content })),
-            { role: 'user', content: userMessage },
-          ],
-          system: 'You are a helpful AI assistant integrated into a CRM system. You help users manage their contacts, companies, and workflows. Be concise and helpful.',
-          stream: false, // Using non-streaming for simplicity and reliability
+          messages: [...messages, newUserMessage].map(m => ({
+            role: m.role,
+            content: m.content
+          })),
         }),
       });
 
@@ -258,30 +218,53 @@ export const AssistantChatbot = () => {
         throw new Error(`API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
 
-      if (data.content && data.content[0] && data.content[0].text) {
-        // Update the assistant message with the full response
-        setMessages(prev => {
-          const newMessages = [...prev];
-          const lastMsg = newMessages[newMessages.length - 1];
-          if (lastMsg.role === 'assistant') {
-            lastMsg.content = data.content[0].text;
+      // Create assistant message for streaming
+      const assistantMessageId = (Date.now() + 1).toString();
+      setMessages(prev => [...prev, {
+        id: assistantMessageId,
+        role: 'assistant',
+        content: ''
+      }]);
+
+      if (reader) {
+        let fullText = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+
+          // Parse AI SDK data stream format
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('0:')) {
+              // Text chunk
+              const text = line.substring(3, line.length - 1);
+              fullText += text;
+
+              setMessages(prev => {
+                const newMessages = [...prev];
+                const lastMsg = newMessages[newMessages.length - 1];
+                if (lastMsg.role === 'assistant') {
+                  lastMsg.content = fullText;
+                }
+                return newMessages;
+              });
+            }
           }
-          return newMessages;
-        });
-      } else {
-        throw new Error('Invalid response format');
+        }
       }
     } catch (error) {
-      console.error('Error calling Anthropic API:', error);
+      console.error('Error calling API:', error);
       setMessages(prev => {
-        // Remove empty assistant message and add error message
         const filtered = prev.filter(m => m.content !== '');
         return [...filtered, {
           id: Date.now().toString(),
           role: 'assistant',
-          content: 'Sorry, I encountered an error. Please try again.',
+          content: 'Sorry, I encountered an error connecting to the AI assistant. Please make sure the backend server is running on port 3002.',
         }];
       });
     } finally {
@@ -290,9 +273,7 @@ export const AssistantChatbot = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Stop propagation to prevent keyboard shortcuts
     e.stopPropagation();
-
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       handleSubmit(e as any);
@@ -305,14 +286,12 @@ export const AssistantChatbot = () => {
         {messages.length === 0 && (
           <StyledMessage role="assistant">
             <StyledMessageContent role="assistant">
-              <p>Hi! I'm your AI assistant. I can help you with:</p>
-              <ul>
-                <li>Finding and managing contacts and companies</li>
-                <li>Understanding your workflows and automations</li>
-                <li>Answering questions about your CRM data</li>
-                <li>Providing insights and recommendations</li>
-              </ul>
-              <p>How can I help you today?</p>
+              Hi! I'm your AI assistant powered by Claude. I can help you with:
+              {'\n\n'}• Finding and managing contacts and companies
+              {'\n'}• Understanding your workflows and automations
+              {'\n'}• Answering questions about your CRM data
+              {'\n'}• Providing insights and recommendations
+              {'\n\n'}How can I help you today?
             </StyledMessageContent>
           </StyledMessage>
         )}
@@ -323,9 +302,7 @@ export const AssistantChatbot = () => {
               {message.role === 'user' ? 'You' : 'AI Assistant'}
             </StyledMessageHeader>
             <StyledMessageContent role={message.role}>
-              {message.content.split('\n').map((line, i) => (
-                <p key={i}>{line || '\u00A0'}</p>
-              ))}
+              {message.content}
             </StyledMessageContent>
           </StyledMessage>
         ))}
