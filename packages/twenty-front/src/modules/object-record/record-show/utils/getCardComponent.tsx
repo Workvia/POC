@@ -4,6 +4,8 @@ import { FilesCard } from '@/activities/files/components/FilesCard';
 import { NotesCard } from '@/activities/notes/components/NotesCard';
 import { TasksCard } from '@/activities/tasks/components/TasksCard';
 import { TimelineCard } from '@/activities/timeline-activities/components/TimelineCard';
+import { AssistantCard } from '@/assistant/components/AssistantCard';
+import { WorkflowsCard } from '@/assistant/components/WorkflowsCard';
 import { FieldsCard } from '@/object-record/record-show/components/FieldsCard';
 import {
   type CardConfiguration,
@@ -87,6 +89,12 @@ export const getCardComponent = <T extends CardType>(
 
     case CardType.DashboardCard:
       throw new Error('Dashboard are handled separately currently');
+
+    case CardType.AssistantCard:
+      return <CardRenderer Component={AssistantCard} />;
+
+    case CardType.WorkflowsCard:
+      return <CardRenderer Component={WorkflowsCard} />;
 
     default:
       assertUnreachable(cardType);
