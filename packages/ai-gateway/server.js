@@ -30,7 +30,7 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY
 });
 
-// Main chat endpoint using Anthropic SDK directly
+// Main chat endpoint - proxy to Agent SDK with Skills
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages } = req.body;
@@ -49,6 +49,7 @@ app.post('/api/chat', async (req, res) => {
     }
 
     console.log(`[AI Gateway] Using ${validMessages.length} valid messages`);
+    console.log(`[AI Gateway] Proxying to Agent SDK at ${PYTHON_AGENT_URL}/api/chat`);
 
     // Define tools for CRM operations
     const tools = {
@@ -143,24 +144,32 @@ app.post('/api/chat', async (req, res) => {
     res.setHeader('Transfer-Encoding', 'chunked');
     res.setHeader('X-Content-Type-Options', 'nosniff');
 
-    console.log('[AI Gateway] Starting stream...');
+    console.log('[AI Gateway] Starting stream via Agent SDK...');
 
-    // Use Anthropic SDK streaming (same as Python backend)
-    const stream = await anthropic.messages.stream({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 2048,
-      messages: validMessages,
-      system: 'You are a helpful AI assistant integrated into Twenty CRM. You help users manage their contacts, companies, and workflows. Be concise and helpful.'
+    // Proxy to Agent SDK backend with Skills support
+    const agentResponse = await fetch(`${PYTHON_AGENT_URL}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ messages: validMessages })
     });
 
-    // Stream the response in AI SDK data format
-    for await (const chunk of stream) {
-      if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-        const text = chunk.delta.text;
-        console.log('[AI Gateway] Chunk:', text);
-        // Use JSON.stringify to properly escape the text while preserving newlines for markdown
-        res.write(`0:${JSON.stringify(text)}\n`);
-      }
+    if (!agentResponse.ok) {
+      throw new Error(`Agent SDK error: ${agentResponse.status}`);
+    }
+
+    // Stream the response from Agent SDK to frontend
+    const reader = agentResponse.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      // Forward chunks directly from Agent SDK (already in correct format)
+      res.write(chunk);
     }
 
     res.end();
