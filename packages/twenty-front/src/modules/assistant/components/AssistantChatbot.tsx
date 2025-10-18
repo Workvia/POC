@@ -624,6 +624,44 @@ export const AssistantChatbot = () => {
             <StyledMessageHeader>
               {message.role === 'user' ? 'You' : 'AI Assistant'}
             </StyledMessageHeader>
+
+            {/* Reasoning Component - Show tool usage */}
+            {message.role === 'assistant' && message.reasoningSteps && message.reasoningSteps.length > 0 && (
+              <StyledReasoningContainer isExpanded={expandedReasoning.has(message.id)}>
+                <StyledReasoningHeader
+                  onClick={() => {
+                    setExpandedReasoning(prev => {
+                      const next = new Set(prev);
+                      if (next.has(message.id)) {
+                        next.delete(message.id);
+                      } else {
+                        next.add(message.id);
+                      }
+                      return next;
+                    });
+                  }}
+                >
+                  <span>🧠 Reasoning ({message.reasoningSteps.length} steps)</span>
+                  <IconChevronDown
+                    size={16}
+                    style={{
+                      transform: expandedReasoning.has(message.id) ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s',
+                    }}
+                  />
+                </StyledReasoningHeader>
+                {expandedReasoning.has(message.id) && (
+                  <StyledReasoningContent>
+                    {message.reasoningSteps.map((step, idx) => (
+                      <StyledReasoningStep key={idx}>
+                        <span>{step}</span>
+                      </StyledReasoningStep>
+                    ))}
+                  </StyledReasoningContent>
+                )}
+              </StyledReasoningContainer>
+            )}
+
             <StyledMessageContent role={message.role}>
               {message.role === 'assistant' ? (
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -633,6 +671,34 @@ export const AssistantChatbot = () => {
                 message.content
               )}
             </StyledMessageContent>
+
+            {/* Copy Button */}
+            {message.role === 'assistant' && message.content && (
+              <StyledCopyButton
+                copied={copiedMessageId === message.id}
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(message.content);
+                    setCopiedMessageId(message.id);
+                    setTimeout(() => setCopiedMessageId(null), 2000);
+                  } catch (err) {
+                    console.error('Failed to copy:', err);
+                  }
+                }}
+              >
+                {copiedMessageId === message.id ? (
+                  <>
+                    <IconCheck size={14} />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <IconCopy size={14} />
+                    Copy response
+                  </>
+                )}
+              </StyledCopyButton>
+            )}
           </StyledMessage>
         ))}
 
