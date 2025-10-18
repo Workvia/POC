@@ -201,7 +201,7 @@ export const AssistantChatbot = () => {
 
     try {
       // Call backend API
-      const response = await fetch('http://localhost:3002/api/chat', {
+      const response = await fetch('http://localhost:3003/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
