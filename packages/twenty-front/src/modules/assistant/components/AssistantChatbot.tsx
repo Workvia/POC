@@ -273,10 +273,76 @@ const StyledSuggestionChip = styled.button`
   }
 `;
 
+const StyledReasoningContainer = styled.div<{ isExpanded: boolean }>`
+  margin: 8px 0;
+  border: 1px solid ${({ theme }) => theme.border.color.medium};
+  border-radius: 8px;
+  background: ${({ theme }) => theme.background.tertiary};
+  overflow: hidden;
+`;
+
+const StyledReasoningHeader = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: ${({ theme }) => theme.font.color.secondary};
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.2s;
+
+  &:hover {
+    background: ${({ theme }) => theme.background.transparent.light};
+  }
+`;
+
+const StyledReasoningContent = styled.div`
+  padding: 8px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const StyledReasoningStep = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: ${({ theme }) => theme.font.color.tertiary};
+`;
+
+const StyledCopyButton = styled.button<{ copied: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: ${({ theme, copied }) =>
+    copied ? theme.color.green : 'transparent'};
+  border: 1px solid ${({ theme, copied }) =>
+    copied ? theme.color.green : theme.border.color.medium};
+  border-radius: 6px;
+  color: ${({ theme, copied }) =>
+    copied ? 'white' : theme.font.color.secondary};
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+
+  &:hover {
+    background: ${({ theme, copied }) =>
+      copied ? theme.color.green : theme.background.transparent.light};
+  }
+`;
+
 type Message = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  reasoningSteps?: string[];
 };
 
 const SUGGESTIONS = [
@@ -298,6 +364,8 @@ export const AssistantChatbot = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [expandedReasoning, setExpandedReasoning] = useState<Set<string>>(new Set());
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -356,6 +424,8 @@ export const AssistantChatbot = () => {
 
       if (reader) {
         let fullText = '';
+        const reasoningSteps: string[] = [];
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -376,12 +446,30 @@ export const AssistantChatbot = () => {
                   const lastMsg = newMessages[newMessages.length - 1];
                   if (lastMsg.role === 'assistant') {
                     lastMsg.content = fullText;
+                    lastMsg.reasoningSteps = reasoningSteps.length > 0 ? [...reasoningSteps] : undefined;
                   }
                   return newMessages;
                 });
               } catch (e) {
                 // Skip malformed lines
                 console.warn('Failed to parse stream line:', line);
+              }
+            } else if (line.startsWith('8:')) {
+              // Reasoning chunk - tool usage events
+              try {
+                const reasoning = JSON.parse(line.substring(2));
+                reasoningSteps.push(reasoning);
+
+                setMessages(prev => {
+                  const newMessages = [...prev];
+                  const lastMsg = newMessages[newMessages.length - 1];
+                  if (lastMsg.role === 'assistant') {
+                    lastMsg.reasoningSteps = [...reasoningSteps];
+                  }
+                  return newMessages;
+                });
+              } catch (e) {
+                console.warn('Failed to parse reasoning line:', line);
               }
             }
           }
@@ -453,6 +541,8 @@ export const AssistantChatbot = () => {
 
       if (reader) {
         let fullText = '';
+        const reasoningSteps: string[] = [];
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -471,11 +561,28 @@ export const AssistantChatbot = () => {
                   const lastMsg = newMessages[newMessages.length - 1];
                   if (lastMsg.role === 'assistant') {
                     lastMsg.content = fullText;
+                    lastMsg.reasoningSteps = reasoningSteps.length > 0 ? [...reasoningSteps] : undefined;
                   }
                   return newMessages;
                 });
               } catch (e) {
                 console.warn('Failed to parse stream line:', line);
+              }
+            } else if (line.startsWith('8:')) {
+              try {
+                const reasoning = JSON.parse(line.substring(2));
+                reasoningSteps.push(reasoning);
+
+                setMessages(prev => {
+                  const newMessages = [...prev];
+                  const lastMsg = newMessages[newMessages.length - 1];
+                  if (lastMsg.role === 'assistant') {
+                    lastMsg.reasoningSteps = [...reasoningSteps];
+                  }
+                  return newMessages;
+                });
+              } catch (e) {
+                console.warn('Failed to parse reasoning line:', line);
               }
             }
           }
