@@ -158,9 +158,8 @@ app.post('/api/chat', async (req, res) => {
       if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
         const text = chunk.delta.text;
         console.log('[AI Gateway] Chunk:', text);
-        // Only escape backslashes and quotes, NOT newlines (for markdown rendering)
-        const escaped = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-        res.write(`0:"${escaped}"\n`);
+        // Use JSON.stringify to properly escape the text while preserving newlines for markdown
+        res.write(`0:${JSON.stringify(text)}\n`);
       }
     }
 

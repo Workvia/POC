@@ -366,18 +366,23 @@ export const AssistantChatbot = () => {
           const lines = chunk.split('\n');
           for (const line of lines) {
             if (line.startsWith('0:')) {
-              // Text chunk
-              const text = line.substring(3, line.length - 1);
-              fullText += text;
+              // Text chunk - parse JSON to properly handle escaped characters
+              try {
+                const text = JSON.parse(line.substring(2));
+                fullText += text;
 
-              setMessages(prev => {
-                const newMessages = [...prev];
-                const lastMsg = newMessages[newMessages.length - 1];
-                if (lastMsg.role === 'assistant') {
-                  lastMsg.content = fullText;
-                }
-                return newMessages;
-              });
+                setMessages(prev => {
+                  const newMessages = [...prev];
+                  const lastMsg = newMessages[newMessages.length - 1];
+                  if (lastMsg.role === 'assistant') {
+                    lastMsg.content = fullText;
+                  }
+                  return newMessages;
+                });
+              } catch (e) {
+                // Skip malformed lines
+                console.warn('Failed to parse stream line:', line);
+              }
             }
           }
         }
@@ -457,17 +462,21 @@ export const AssistantChatbot = () => {
 
           for (const line of lines) {
             if (line.startsWith('0:')) {
-              const text = line.substring(3, line.length - 1);
-              fullText += text;
+              try {
+                const text = JSON.parse(line.substring(2));
+                fullText += text;
 
-              setMessages(prev => {
-                const newMessages = [...prev];
-                const lastMsg = newMessages[newMessages.length - 1];
-                if (lastMsg.role === 'assistant') {
-                  lastMsg.content = fullText;
-                }
-                return newMessages;
-              });
+                setMessages(prev => {
+                  const newMessages = [...prev];
+                  const lastMsg = newMessages[newMessages.length - 1];
+                  if (lastMsg.role === 'assistant') {
+                    lastMsg.content = fullText;
+                  }
+                  return newMessages;
+                });
+              } catch (e) {
+                console.warn('Failed to parse stream line:', line);
+              }
             }
           }
         }
