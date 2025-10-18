@@ -316,25 +316,34 @@ const StyledReasoningStep = styled.div`
 `;
 
 const StyledCopyButton = styled.button<{ copied: boolean }>`
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
   background: ${({ theme, copied }) =>
-    copied ? theme.color.green : 'transparent'};
+    copied ? theme.color.green : theme.background.transparent.light};
   border: 1px solid ${({ theme, copied }) =>
     copied ? theme.color.green : theme.border.color.medium};
   border-radius: 6px;
   color: ${({ theme, copied }) =>
     copied ? 'white' : theme.font.color.secondary};
   font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  margin-top: 8px;
+  margin-top: 12px;
 
   &:hover {
     background: ${({ theme, copied }) =>
-      copied ? theme.color.green : theme.background.transparent.light};
+      copied ? theme.color.green : theme.background.secondary};
+    border-color: ${({ theme, copied }) =>
+      copied ? theme.color.green : theme.color.blue};
+    color: ${({ theme, copied }) =>
+      copied ? 'white' : theme.color.blue};
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 `;
 
