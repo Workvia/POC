@@ -1,0 +1,19 @@
+{
+  "name": "ai-gateway",
+  "version": "1.0.0",
+  "description": "Lightweight AI SDK gateway for Twenty CRM chatbot",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.0.8",
+    "@anthropic-ai/sdk": "^0.67.0",
+    "ai": "^4.0.76",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0"
+  }
+}

@@ -20,10 +20,10 @@ load_dotenv()
 
 app = FastAPI(title="Twenty CRM AI Agent Backend")
 
-# Enable CORS for frontend
+# Enable CORS for frontend and AI gateway
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001"],
+    allow_origins=["http://localhost:3001", "http://localhost:3003"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,6 +46,71 @@ async def health_check():
             "MCP Integration"
         ]
     }
+
+# REST Tool Endpoints (for AI Gateway to call)
+@app.post("/api/tools/search_companies")
+async def tool_search_companies(request: Request):
+    """Tool endpoint: Search companies in CRM"""
+    try:
+        body = await request.json()
+        query = body.get("query", "")
+        print(f"[Tool API] Search companies: {query}")
+
+        companies = crm_client.search_companies(query, limit=5)
+
+        if not companies:
+            return {"result": f"No companies found matching '{query}'."}
+
+        results = [f"Found {len(companies)} companies matching '{query}':\n"]
+        for company in companies:
+            results.append(crm_client.format_company_for_display(company))
+            results.append("\n")
+
+        return {"result": "\n".join(results)}
+    except Exception as e:
+        print(f"[Tool API] Error: {e}")
+        return {"result": f"Error: {str(e)}"}
+
+@app.post("/api/tools/search_contacts")
+async def tool_search_contacts(request: Request):
+    """Tool endpoint: Search contacts/people in CRM"""
+    try:
+        body = await request.json()
+        query = body.get("query", "")
+        print(f"[Tool API] Search contacts: {query}")
+
+        people = crm_client.search_people(query, limit=5)
+
+        if not people:
+            return {"result": f"No contacts found matching '{query}'."}
+
+        results = [f"Found {len(people)} contacts matching '{query}':\n"]
+        for person in people:
+            results.append(crm_client.format_person_for_display(person))
+            results.append("\n")
+
+        return {"result": "\n".join(results)}
+    except Exception as e:
+        print(f"[Tool API] Error: {e}")
+        return {"result": f"Error: {str(e)}"}
+
+@app.post("/api/tools/get_company_details")
+async def tool_get_company_details(request: Request):
+    """Tool endpoint: Get detailed company information"""
+    try:
+        body = await request.json()
+        company_id = body.get("company_id", "")
+        print(f"[Tool API] Get company details: {company_id}")
+
+        company = crm_client.get_company_by_id(company_id)
+
+        if not company:
+            return {"result": f"Company with ID '{company_id}' not found."}
+
+        return {"result": crm_client.format_company_for_display(company)}
+    except Exception as e:
+        print(f"[Tool API] Error: {e}")
+        return {"result": f"Error: {str(e)}"}
 
 @app.post("/api/chat")
 async def chat(request: Request):
