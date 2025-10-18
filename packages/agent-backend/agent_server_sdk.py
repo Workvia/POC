@@ -22,6 +22,9 @@ from claude_agent_sdk import (
     create_sdk_mcp_server,
     AssistantMessage,
     TextBlock,
+    ToolUseBlock,
+    ToolResultBlock,
+    ThinkingBlock,
 )
 
 # Import CRM tools
@@ -146,13 +149,53 @@ Be conversational, helpful, and professional. Always cite which Skill file you r
 
                 # Use Claude Agent SDK query function
                 async for message in query(prompt=user_message, options=options):
+                    # Log ALL message types for debugging
+                    print(f"[Agent SDK] Message type: {type(message).__name__}")
+
                     if isinstance(message, AssistantMessage):
-                        # Stream text content
+                        # Stream all content blocks
                         for block in message.content:
                             if isinstance(block, TextBlock):
+                                # Stream text content as data part
                                 text = block.text
-                                # Send in AI SDK data stream format for frontend compatibility
                                 yield f'0:{json.dumps(text)}\n'
+
+                            elif isinstance(block, ToolUseBlock):
+                                # Stream tool use as reasoning event
+                                tool_name = block.name
+                                tool_input = json.dumps(block.input) if hasattr(block, 'input') else ''
+                                reasoning_text = f"🔧 Using tool: {tool_name}"
+
+                                # Add tool input details for Read/Grep tools
+                                if tool_name == "Read" and 'file_path' in str(tool_input):
+                                    file_path = block.input.get('file_path', '') if hasattr(block, 'input') else ''
+                                    if file_path:
+                                        reasoning_text = f"📖 Reading Skills file: {file_path}"
+                                elif tool_name == "Grep" and 'pattern' in str(tool_input):
+                                    pattern = block.input.get('pattern', '') if hasattr(block, 'input') else ''
+                                    if pattern:
+                                        reasoning_text = f"🔍 Searching Skills for: {pattern}"
+
+                                # Stream as reasoning part
+                                yield f'8:{json.dumps(reasoning_text)}\n'
+                                print(f"[Agent SDK] Tool use: {tool_name}")
+
+                            elif isinstance(block, ThinkingBlock):
+                                # Stream thinking as reasoning event
+                                thinking_text = block.thinking if hasattr(block, 'thinking') else str(block)
+                                yield f'8:{json.dumps(f"💭 {thinking_text}")}\n'
+                                print(f"[Agent SDK] Thinking block")
+
+                            elif isinstance(block, ToolResultBlock):
+                                # Optionally stream tool results as reasoning
+                                print(f"[Agent SDK] Tool result received")
+
+                            else:
+                                # Log other block types
+                                print(f"[Agent SDK] Other block type: {type(block).__name__}")
+                    else:
+                        # Log non-assistant messages
+                        print(f"[Agent SDK] Non-assistant message: {message}")
 
                 print("[Agent SDK] Stream completed")
 
