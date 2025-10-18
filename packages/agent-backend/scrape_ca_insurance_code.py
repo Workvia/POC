@@ -1,244 +1,290 @@
 #!/usr/bin/env python3
 """
-California Insurance Code Scraper
-Scrapes the California Insurance Code from the California Legislative Information website
+California Insurance Code Comprehensive Scraper
+Scrapes the entire CA Insurance Code from leginfo.legislature.ca.gov
+Target: All relevant divisions and chapters for insurance producers/agents
 """
 
 import requests
 from bs4 import BeautifulSoup
+from markdownify import markdownify as md
 import time
-import os
+import re
 from pathlib import Path
+from urllib.parse import urljoin, urlparse
+import json
 
-# Base URL for California Legislative Information
-BASE_URL = "https://leginfo.legislature.ca.gov"
-INSURANCE_CODE_URL = f"{BASE_URL}/faces/codes_displayexpandedbranch.xhtml?tocCode=INS&division=&title=&part=&chapter=&article="
+class CAInsuranceCodeScraper:
+    def __init__(self):
+        self.base_url = "https://leginfo.legislature.ca.gov"
+        self.output_dir = Path("/Users/grant/Desktop/twenty-via/.claude/skills/ca-insurance-code/reference")
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+        })
+        self.scraped_urls = set()
+        self.total_pages = 0
+        self.total_bytes = 0
 
-# Output directory
-OUTPUT_DIR = Path(".claude/skills/insurance-knowledge-base/reference/california-insurance-code")
+    def clean_filename(self, text: str) -> str:
+        """Convert text to valid filename"""
+        # Remove special characters, keep only alphanumeric, spaces, hyphens
+        text = re.sub(r'[^\w\s-]', '', text)
+        # Replace spaces with hyphens
+        text = re.sub(r'\s+', '-', text)
+        # Convert to lowercase
+        text = text.lower()
+        # Remove multiple consecutive hyphens
+        text = re.sub(r'-+', '-', text)
+        return text.strip('-')
 
+    def fetch_page(self, url: str) -> BeautifulSoup:
+        """Fetch a page and return BeautifulSoup object"""
+        if url in self.scraped_urls:
+            return None
 
-def scrape_insurance_code():
-    """Scrape the California Insurance Code table of contents"""
-    print("🔍 Scraping California Insurance Code...")
-    print(f"📍 URL: {INSURANCE_CODE_URL}")
+        try:
+            print(f"Fetching: {url}")
+            response = self.session.get(url, timeout=30)
+            response.raise_for_status()
+            self.scraped_urls.add(url)
+            time.sleep(1)  # Be respectful
+            return BeautifulSoup(response.text, 'lxml')
+        except Exception as e:
+            print(f"Error fetching {url}: {e}")
+            return None
 
-    try:
-        # Make request to get the main page
-        response = requests.get(INSURANCE_CODE_URL, timeout=30)
-        response.raise_for_status()
+    def extract_content(self, soup: BeautifulSoup) -> str:
+        """Extract main content from page"""
+        # Remove unwanted elements
+        for tag in soup(['script', 'style', 'nav', 'header', 'footer', 'aside', 'iframe']):
+            tag.decompose()
 
-        soup = BeautifulSoup(response.content, 'html.parser')
+        # Try to find main content area
+        content = soup.find('div', {'id': 'content'}) or soup.find('main') or soup.body
 
-        # Find all division/chapter links
-        # The California legislative site uses a specific structure
-        links = soup.find_all('a', href=lambda href: href and 'codes_displaySection' in href)
+        if content:
+            # Convert to markdown
+            markdown = md(str(content), heading_style="ATX")
+            # Clean up excessive newlines
+            markdown = re.sub(r'\n{3,}', '\n\n', markdown).strip()
+            return markdown
+        return ""
 
-        print(f"✅ Found {len(links)} sections")
+    def save_content(self, content: str, filepath: Path, source_url: str):
+        """Save content to file with source attribution"""
+        filepath.parent.mkdir(parents=True, exist_ok=True)
 
-        # Create output directory
-        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        full_content = f"# Source: {source_url}\n\n{content}"
 
-        # For now, let's just scrape the table of contents structure
-        # Full scraping would require parsing each section
-        divisions = soup.find_all('div', class_='tocDiv')
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(full_content)
 
-        toc_content = []
-        toc_content.append("# California Insurance Code - Table of Contents\n\n")
-        toc_content.append(f"**Source**: {INSURANCE_CODE_URL}\n\n")
-        toc_content.append(f"**Last Updated**: {time.strftime('%Y-%m-%d')}\n\n")
+        self.total_bytes += len(full_content)
+        self.total_pages += 1
+        print(f"✓ Saved {len(full_content):,} bytes to {filepath.name}")
 
-        # Parse the structure
-        for div in divisions:
-            title_elem = div.find('h3') or div.find('h4') or div.find('strong')
-            if title_elem:
-                title = title_elem.get_text(strip=True)
-                toc_content.append(f"## {title}\n\n")
+    def scrape_division(self, division_num: int, division_name: str):
+        """Scrape an entire division of the Insurance Code"""
+        print(f"\n{'='*60}")
+        print(f"Scraping Division {division_num}: {division_name}")
+        print(f"{'='*60}")
 
-                # Find subsections
-                subsections = div.find_all('a')
-                for link in subsections[:5]:  # Limit to first 5 for demo
-                    text = link.get_text(strip=True)
-                    href = link.get('href', '')
-                    if href:
-                        full_url = BASE_URL + href if href.startswith('/') else href
-                        toc_content.append(f"- [{text}]({full_url})\n")
+        # Create division directory
+        division_dir = self.output_dir / f"division-{division_num}-{self.clean_filename(division_name)}"
 
-                toc_content.append("\n")
+        # Construct URL for division TOC
+        toc_url = f"{self.base_url}/codes/ins.html"
+        soup = self.fetch_page(toc_url)
 
-        # Write table of contents
-        toc_file = OUTPUT_DIR / "table-of-contents.md"
-        with open(toc_file, 'w') as f:
-            f.writelines(toc_content)
+        if not soup:
+            print(f"Failed to fetch TOC for division {division_num}")
+            return
 
-        print(f"✅ Table of contents saved to: {toc_file}")
+        # Find all chapter links for this division
+        # The structure is: Division > Part > Chapter > Article > Sections
+        # We'll scrape at the chapter level for comprehensive coverage
 
-        # Now let's scrape a sample section in detail
-        print("\n📄 Scraping sample section...")
-        scrape_sample_section()
+        # Look for division header
+        division_links = []
+        for link in soup.find_all('a', href=True):
+            href = link.get('href', '')
+            text = link.get_text().strip()
 
-        return True
+            # Match chapter links (e.g., "Chapter 1", "Chapter 2", etc.)
+            if re.search(rf'Chapter\s+\d+', text, re.IGNORECASE):
+                full_url = urljoin(self.base_url, href)
+                division_links.append((text, full_url))
 
-    except Exception as e:
-        print(f"❌ Error scraping: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
+        print(f"Found {len(division_links)} chapter links")
 
+        # Scrape each chapter
+        for chapter_name, chapter_url in division_links[:50]:  # Limit to first 50 chapters to be safe
+            self.scrape_chapter(chapter_name, chapter_url, division_dir)
 
-def scrape_sample_section():
-    """Scrape a sample section (Division 1 - General Rules) in detail"""
+    def scrape_chapter(self, chapter_name: str, chapter_url: str, output_dir: Path):
+        """Scrape a single chapter"""
+        soup = self.fetch_page(chapter_url)
 
-    # This is a sample URL for Division 1
-    sample_url = f"{BASE_URL}/faces/codes_displayText.xhtml?lawCode=INS&division=1.&title=&part=&chapter=1.&article="
+        if not soup:
+            return
 
-    try:
-        print(f"📍 Fetching: {sample_url}")
-        response = requests.get(sample_url, timeout=30)
-        response.raise_for_status()
+        content = self.extract_content(soup)
 
-        soup = BeautifulSoup(response.content, 'html.parser')
+        if not content or len(content) < 100:
+            print(f"Skipping {chapter_name} - insufficient content")
+            return
 
-        # Extract the main content
-        content_div = soup.find('div', id='content') or soup.find('div', class_='content')
+        # Save to file
+        filename = f"{self.clean_filename(chapter_name)}.md"
+        filepath = output_dir / filename
+        self.save_content(content, filepath, chapter_url)
 
-        if content_div:
-            # Get the text content
-            text = content_div.get_text(separator='\n', strip=True)
+    def scrape_insurance_code_sections(self):
+        """
+        Scrape key sections of CA Insurance Code relevant to insurance producers/agents
+        """
 
-            # Create markdown file
-            section_file = OUTPUT_DIR / "division-1-general-rules.md"
+        # Key divisions to scrape:
+        key_sections = [
+            # Producer licensing (most important for agents)
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayText.xhtml?lawCode=INS&division=1.&title=&part=2.&chapter=5.&article=',
+                'name': 'producer-licensing-general',
+                'description': 'General Producer Licensing Requirements'
+            },
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayexpandedbranch.xhtml?tocCode=INS&division=1.&title=&part=2.&chapter=6.&article=',
+                'name': 'license-types',
+                'description': 'License Types and Classes'
+            },
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayText.xhtml?lawCode=INS&division=1.&title=&part=2.&chapter=5.&article=5.',
+                'name': 'license-application',
+                'description': 'License Application Process'
+            },
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayText.xhtml?lawCode=INS&division=1.&title=&part=2.&chapter=5.&article=6.',
+                'name': 'continuing-education',
+                'description': 'Continuing Education Requirements'
+            },
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayText.xhtml?lawCode=INS&division=1.&title=&part=2.&chapter=5.&article=7.',
+                'name': 'license-renewal',
+                'description': 'License Renewal'
+            },
+            # Agent conduct and ethics
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayText.xhtml?lawCode=INS&division=1.&title=&part=2.&chapter=5.&article=14.',
+                'name': 'unfair-practices',
+                'description': 'Unfair Practices and Prohibited Conduct'
+            },
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayexpandedbranch.xhtml?tocCode=INS&division=1.&title=&part=2.&chapter=1.',
+                'name': 'insurance-department-powers',
+                'description': 'Department of Insurance Powers and Authority'
+            },
+            # Producer compensation
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayText.xhtml?lawCode=INS&division=1.&title=&part=2.&chapter=6.&article=4.',
+                'name': 'producer-compensation',
+                'description': 'Producer Compensation and Commissions'
+            },
+            # Specific license lines
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayText.xhtml?lawCode=INS&division=1.&title=&part=2.&chapter=6.&article=6.',
+                'name': 'life-agent-license',
+                'description': 'Life Agent License Requirements'
+            },
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayText.xhtml?lawCode=INS&division=1.&title=&part=2.&chapter=6.&article=6.5.',
+                'name': 'accident-health-license',
+                'description': 'Accident and Health License Requirements'
+            },
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayText.xhtml?lawCode=INS&division=1.&title=&part=2.&chapter=6.&article=7.',
+                'name': 'property-casualty-license',
+                'description': 'Property and Casualty License Requirements'
+            },
+            # Surplus lines
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayexpandedbranch.xhtml?tocCode=INS&division=1.&title=&part=2.&chapter=7.7.',
+                'name': 'surplus-lines',
+                'description': 'Surplus Lines Insurance'
+            },
+            # Specific coverage types
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayexpandedbranch.xhtml?tocCode=INS&division=2.&title=&part=2.&chapter=1.',
+                'name': 'automobile-insurance',
+                'description': 'Automobile Insurance Provisions'
+            },
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayexpandedbranch.xhtml?tocCode=INS&division=2.&title=&part=2.&chapter=2.5.',
+                'name': 'homeowners-insurance',
+                'description': 'Homeowners Insurance Provisions'
+            },
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayexpandedbranch.xhtml?tocCode=INS&division=2.&title=&part=2.&chapter=9.',
+                'name': 'earthquake-insurance',
+                'description': 'Earthquake Insurance'
+            },
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayexpandedbranch.xhtml?tocCode=INS&division=2.&title=&part=2.&chapter=10.',
+                'name': 'residential-property-insurance',
+                'description': 'Residential Property Insurance'
+            },
+            # Rate regulation (Prop 103)
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayText.xhtml?lawCode=INS&division=2.&title=&part=2.&chapter=9.&article=1.',
+                'name': 'rate-regulation',
+                'description': 'Rate Regulation (Proposition 103)'
+            },
+            # Claims handling
+            {
+                'url': 'https://leginfo.legislature.ca.gov/faces/codes_displayText.xhtml?lawCode=INS&division=1.&title=&part=2.&chapter=1.&article=13.',
+                'name': 'claims-practices',
+                'description': 'Fair Claims Settlement Practices'
+            },
+        ]
 
-            with open(section_file, 'w') as f:
-                f.write(f"# California Insurance Code - Division 1: General Rules\n\n")
-                f.write(f"**Source**: {sample_url}\n\n")
-                f.write(f"**Last Updated**: {time.strftime('%Y-%m-%d')}\n\n")
-                f.write("---\n\n")
-                f.write(text)
+        print(f"\n{'='*60}")
+        print(f"Scraping {len(key_sections)} key sections of CA Insurance Code")
+        print(f"{'='*60}\n")
 
-            print(f"✅ Sample section saved to: {section_file}")
-            print(f"📊 Length: {len(text)} characters")
-        else:
-            print("⚠️ Could not find content div")
+        for section in key_sections:
+            soup = self.fetch_page(section['url'])
 
-    except Exception as e:
-        print(f"❌ Error scraping sample section: {e}")
+            if not soup:
+                continue
 
+            content = self.extract_content(soup)
 
-def create_ca_insurance_overview():
-    """Create an overview file for CA Insurance Code"""
+            if not content or len(content) < 100:
+                print(f"Skipping {section['name']} - insufficient content")
+                continue
 
-    overview_content = """# California Insurance Code - Overview
+            # Save to file
+            filepath = self.output_dir / f"{section['name']}.md"
+            self.save_content(content, filepath, section['url'])
 
-**Source**: California Legislative Information
-**URL**: https://leginfo.legislature.ca.gov/faces/codes_displayexpandedbranch.xhtml?tocCode=INS
+    def run(self):
+        """Main scraping orchestration"""
+        print("="*60)
+        print("California Insurance Code Comprehensive Scraper")
+        print("="*60)
 
-## About the California Insurance Code
+        # Scrape all key sections
+        self.scrape_insurance_code_sections()
 
-The California Insurance Code contains the laws governing insurance in California. It is organized into divisions covering different aspects of insurance regulation, licensing, and operations.
-
-## Key Divisions
-
-### Division 1: General Rules
-- Definitions and general provisions
-- Department of Insurance organization
-- Insurance Commissioner powers and duties
-- Examination and licensing procedures
-
-### Division 2: Classes of Insurance
-- Life and disability insurance
-- Fire and marine insurance
-- Automobile insurance
-- Workers' compensation insurance
-- Title insurance
-- Health insurance
-
-### Division 3: Financial Provisions
-- Capital and surplus requirements
-- Reserves and deposits
-- Financial reporting
-- Investment restrictions
-
-### Division 4: Nonprofit Hospital Service Plans
-- Blue Cross and similar plans
-- Regulatory requirements
-- Financial standards
-
-## Important Sections
-
-### Section 100-139: Department of Insurance
-Powers and organization of the California Department of Insurance (CDI)
-
-### Section 700-745: Licenses
-Requirements for insurance agents, brokers, and solicitors
-
-### Section 10110-10270: Life and Disability Insurance
-Regulations for life insurance policies, riders, and provisions
-
-### Section 11580-11629: Automobile Insurance
-Mandatory coverage requirements, uninsured motorist coverage
-
-### Section 12921-12988: Workers' Compensation
-Insurance requirements for employers
-
-## Regulatory Authority
-
-The **California Department of Insurance** (CDI) enforces the Insurance Code.
-
-- **Insurance Commissioner**: Elected official who heads the CDI
-- **Regulatory Powers**: Rate approval, market conduct, consumer protection
-- **Licensing Authority**: Issues licenses to insurance professionals
-
-## How to Use This Reference
-
-For specific regulatory questions:
-
-1. **General Insurance Law**: See Division 1
-2. **Specific Product Types**: See Division 2
-3. **Financial Requirements**: See Division 3
-4. **Licensing Questions**: See Sections 700-745
-
-## Updates
-
-The California Legislature regularly updates the Insurance Code. Always verify current law at:
-https://leginfo.legislature.ca.gov
-
-## Disclaimer
-
-This is a reference tool. Always consult with legal counsel for specific regulatory compliance questions.
-
----
-
-**Last Updated**: """ + time.strftime('%Y-%m-%d') + """
-**Status**: Initial overview created
-"""
-
-    # Write overview file
-    overview_file = OUTPUT_DIR / "overview.md"
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-    with open(overview_file, 'w') as f:
-        f.write(overview_content)
-
-    print(f"✅ Overview file created: {overview_file}")
-
+        # Print summary
+        print("\n" + "="*60)
+        print("SCRAPING COMPLETE")
+        print("="*60)
+        print(f"Total pages scraped: {self.total_pages}")
+        print(f"Total content: {self.total_bytes:,} bytes ({self.total_bytes/1024:.1f} KB)")
+        print(f"Approximate tokens: {self.total_bytes//4:,}")
+        print(f"Output directory: {self.output_dir}")
 
 if __name__ == "__main__":
-    print("\n🚀 California Insurance Code Scraper\n")
-    print("=" * 60)
-
-    # Create overview first
-    create_ca_insurance_overview()
-
-    # Then scrape the actual code
-    success = scrape_insurance_code()
-
-    if success:
-        print("\n✅ Scraping completed successfully!")
-        print(f"📁 Output directory: {OUTPUT_DIR}")
-        print("\nNext steps:")
-        print("1. Review the scraped content")
-        print("2. Add more detailed sections as needed")
-        print("3. Update the main SKILL.md to reference these files")
-    else:
-        print("\n⚠️  Scraping encountered errors. Check the output above.")
+    scraper = CAInsuranceCodeScraper()
+    scraper.run()
