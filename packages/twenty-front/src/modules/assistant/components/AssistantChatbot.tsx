@@ -32,6 +32,7 @@ const StyledMessage = styled.div<{ role: 'user' | 'assistant' }>`
 `;
 
 const StyledMessageContent = styled.div<{ role: 'user' | 'assistant' }>`
+  position: relative;
   max-width: 80%;
   padding: 12px 16px;
   border-radius: 12px;
@@ -43,6 +44,7 @@ const StyledMessageContent = styled.div<{ role: 'user' | 'assistant' }>`
     background: ${theme.background.secondary};
     color: ${theme.font.color.primary};
     border: 1px solid ${theme.border.color.medium};
+    padding-right: 48px;
   `}
 
   /* Markdown styling */
@@ -316,34 +318,55 @@ const StyledReasoningStep = styled.div`
 `;
 
 const StyledCopyButton = styled.button<{ copied: boolean }>`
-  display: inline-flex;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: ${({ theme, copied }) =>
-    copied ? theme.color.green : theme.background.transparent.light};
-  border: 1px solid ${({ theme, copied }) =>
-    copied ? theme.color.green : theme.border.color.medium};
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: ${({ theme }) => theme.background.transparent.light};
+  border: 1px solid ${({ theme }) => theme.border.color.medium};
   border-radius: 6px;
   color: ${({ theme, copied }) =>
-    copied ? 'white' : theme.font.color.secondary};
-  font-size: 12px;
-  font-weight: 500;
+    copied ? theme.color.green : theme.font.color.tertiary};
   cursor: pointer;
   transition: all 0.2s;
-  margin-top: 12px;
+  opacity: 0.6;
 
   &:hover {
-    background: ${({ theme, copied }) =>
-      copied ? theme.color.green : theme.background.secondary};
-    border-color: ${({ theme, copied }) =>
-      copied ? theme.color.green : theme.color.blue};
-    color: ${({ theme, copied }) =>
-      copied ? 'white' : theme.color.blue};
+    opacity: 1;
+    background: ${({ theme }) => theme.background.secondary};
+    border-color: ${({ theme }) => theme.border.color.strong};
+    color: ${({ theme }) => theme.font.color.primary};
   }
 
   &:active {
-    transform: scale(0.98);
+    transform: scale(0.95);
+  }
+
+  &::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 6px;
+    padding: 4px 8px;
+    background: ${({ theme }) => theme.background.primary};
+    border: 1px solid ${({ theme }) => theme.border.color.medium};
+    border-radius: 4px;
+    color: ${({ theme }) => theme.font.color.primary};
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  &:hover::after {
+    opacity: 1;
   }
 `;
 
@@ -673,41 +696,37 @@ export const AssistantChatbot = () => {
 
             <StyledMessageContent role={message.role}>
               {message.role === 'assistant' ? (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {message.content}
-                </ReactMarkdown>
+                <>
+                  {/* Copy Button - Top Right Corner */}
+                  {message.content && (
+                    <StyledCopyButton
+                      copied={copiedMessageId === message.id}
+                      data-tooltip={copiedMessageId === message.id ? 'Copied!' : 'Copy'}
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(message.content);
+                          setCopiedMessageId(message.id);
+                          setTimeout(() => setCopiedMessageId(null), 2000);
+                        } catch (err) {
+                          console.error('Failed to copy:', err);
+                        }
+                      }}
+                    >
+                      {copiedMessageId === message.id ? (
+                        <IconCheck size={16} />
+                      ) : (
+                        <IconCopy size={16} />
+                      )}
+                    </StyledCopyButton>
+                  )}
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {message.content}
+                  </ReactMarkdown>
+                </>
               ) : (
                 message.content
               )}
             </StyledMessageContent>
-
-            {/* Copy Button */}
-            {message.role === 'assistant' && message.content && (
-              <StyledCopyButton
-                copied={copiedMessageId === message.id}
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(message.content);
-                    setCopiedMessageId(message.id);
-                    setTimeout(() => setCopiedMessageId(null), 2000);
-                  } catch (err) {
-                    console.error('Failed to copy:', err);
-                  }
-                }}
-              >
-                {copiedMessageId === message.id ? (
-                  <>
-                    <IconCheck size={14} />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <IconCopy size={14} />
-                    Copy response
-                  </>
-                )}
-              </StyledCopyButton>
-            )}
           </StyledMessage>
         ))}
 
