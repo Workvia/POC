@@ -1,4 +1,4 @@
-# Source: https://leginfo.legislature.ca.gov/faces/codes_displayexpandedbranch.xhtml?tocCode=INS&division=1.&title=&part=2.&chapter=7.7.
+# Source: https://leginfo.legislature.ca.gov/faces/codes_displayText.xhtml?lawCode=INS&division=1.&title=&part=2.&chapter=6.&article=6.
 
 * [skip to content](#content_anchor)
 * [home](#)
@@ -32,9 +32,9 @@ Bill Keyword
 * [California Law](/faces/codes.xhtml)
   >>
 * >>
-* # INS
+* Code Section Group
 
-# INS
+# Code Section Group
 
 Code: Select Code
 CONS
@@ -107,8 +107,8 @@ Keyword(s):
 [Code Search](#)
 [Text Search](#)
 
-INSInsurance Code - INS
+[Up^](/faces/codes_displayexpandedbranch.xhtml?lawCode=INS&division=1.&title=&part=2.&chapter=6.&article=6.&goUp=Y)[Add To My Favorites](#)
 
-[Up^](/faces/codes_displayexpandedbranch.xhtml?tocCode=INS&division=1.&title=&part=2.&chapter=7.7.&article=&goUp=Y)[Back To TOC](/faces/codesTOCSelected.xhtml?tocCode=INS)
+## Code Text
 
-[![print page](/resources/images/print_24.gif)](# "Print Bills")
+INSInsurance Code - INS6.
