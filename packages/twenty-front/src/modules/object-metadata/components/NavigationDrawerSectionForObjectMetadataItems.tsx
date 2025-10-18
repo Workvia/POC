@@ -17,7 +17,6 @@ import { useRecoilValue } from 'recoil';
 const ORDERED_STANDARD_OBJECTS: string[] = [
   CoreObjectNameSingular.Person,
   CoreObjectNameSingular.Company,
-  CoreObjectNameSingular.Opportunity,
   CoreObjectNameSingular.Task,
   CoreObjectNameSingular.Note,
 ];
