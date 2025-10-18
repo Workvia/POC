@@ -135,10 +135,7 @@ Be conversational, helpful, and professional. Always cite which Skill file you r
                         "Grep",  # Allow searching within Skills files
                         "Glob",  # Allow finding Skills files
                     ],
-                    blocked_tools=[
-                        "WebSearch",  # Block web search - use Skills instead
-                        "WebFetch",   # Block web fetch - use Skills instead
-                    ],
+                    # Note: By only allowing specific tools, WebSearch/WebFetch are implicitly blocked
                     permission_mode="acceptEdits",
                     max_turns=10,
                     cwd="/Users/grant/Desktop/twenty-via",  # Project root for Skills access
