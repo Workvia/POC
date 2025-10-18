@@ -1,6 +1,8 @@
 import styled from '@emotion/styled';
-import { IconPaperclip, IconChevronDown, IconSend } from 'twenty-ui/display';
+import { IconPaperclip, IconChevronDown, IconSend, IconPlus, IconCheck, IconCopy } from 'twenty-ui/display';
 import { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const StyledChatContainer = styled.div`
   display: flex;
@@ -42,6 +44,51 @@ const StyledMessageContent = styled.div<{ role: 'user' | 'assistant' }>`
     color: ${theme.font.color.primary};
     border: 1px solid ${theme.border.color.medium};
   `}
+
+  /* Markdown styling */
+  p {
+    margin: 8px 0;
+  }
+
+  ul, ol {
+    margin: 8px 0;
+    padding-left: 20px;
+  }
+
+  li {
+    margin: 4px 0;
+  }
+
+  code {
+    background: ${({ theme, role }) =>
+      role === 'user'
+        ? 'rgba(255, 255, 255, 0.2)'
+        : theme.background.transparent.light};
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: ${({ theme, role }) =>
+      role === 'user'
+        ? 'rgba(255, 255, 255, 0.1)'
+        : theme.background.transparent.light};
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 8px 0;
+
+    code {
+      background: transparent;
+      padding: 0;
+    }
+  }
+
+  strong {
+    font-weight: 600;
+  }
 `;
 
 const StyledMessageHeader = styled.div`
@@ -54,7 +101,7 @@ const StyledInputWrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: ${({ theme }) => theme.background.primary};
+  background: ${({ theme }) => theme.background.tertiary};
   border: 1px solid ${({ theme }) => theme.border.color.medium};
   border-radius: 12px;
   padding: 16px;
@@ -163,11 +210,89 @@ const StyledLoadingDots = styled.div`
   }
 `;
 
+const StyledShimmer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 0;
+  max-width: 75%;
+`;
+
+const StyledShimmerLine = styled.div<{ width: string }>`
+  height: 12px;
+  width: ${({ width }) => width};
+  background: linear-gradient(
+    90deg,
+    ${({ theme }) => theme.background.transparent.light} 0%,
+    ${({ theme }) => theme.background.secondary} 50%,
+    ${({ theme }) => theme.background.transparent.light} 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: shimmer 1.5s infinite;
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+`;
+
+const StyledSuggestionsContainer = styled.div`
+  padding: 0 24px 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+`;
+
+const StyledSuggestionChip = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: ${({ theme }) => theme.background.transparent.light};
+  border: 1px solid ${({ theme }) => theme.border.color.medium};
+  border-radius: 20px;
+  color: ${({ theme }) => theme.font.color.secondary};
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: ${({ theme }) => theme.background.secondary};
+    border-color: ${({ theme }) => theme.color.blue};
+    color: ${({ theme }) => theme.color.blue};
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
 type Message = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
 };
+
+const SUGGESTIONS = [
+  {
+    icon: IconPlus,
+    text: 'Find companies in my CRM',
+  },
+  {
+    icon: IconCheck,
+    text: 'Show me recent contacts',
+  },
+  {
+    icon: IconCopy,
+    text: 'Search for Anthropic',
+  },
+];
 
 export const AssistantChatbot = () => {
   const [input, setInput] = useState('');
@@ -274,9 +399,91 @@ export const AssistantChatbot = () => {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     e.stopPropagation();
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e as any);
+    }
+  };
+
+  const handleSuggestionClick = async (suggestion: string) => {
+    if (isLoading) return;
+
+    const userMessage = suggestion.trim();
+    setIsLoading(true);
+
+    const newUserMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: userMessage
+    };
+    setMessages(prev => [...prev, newUserMessage]);
+
+    try {
+      const response = await fetch('http://localhost:3003/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [...messages, newUserMessage].map(m => ({
+            role: m.role,
+            content: m.content
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      const assistantMessageId = (Date.now() + 1).toString();
+      setMessages(prev => [...prev, {
+        id: assistantMessageId,
+        role: 'assistant',
+        content: ''
+      }]);
+
+      if (reader) {
+        let fullText = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('0:')) {
+              const text = line.substring(3, line.length - 1);
+              fullText += text;
+
+              setMessages(prev => {
+                const newMessages = [...prev];
+                const lastMsg = newMessages[newMessages.length - 1];
+                if (lastMsg.role === 'assistant') {
+                  lastMsg.content = fullText;
+                }
+                return newMessages;
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error calling API:', error);
+      setMessages(prev => {
+        const filtered = prev.filter(m => m.content !== '');
+        return [...filtered, {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: 'Sorry, I encountered an error connecting to the AI assistant. Please make sure the AI Gateway is running on port 3003.',
+        }];
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -302,7 +509,13 @@ export const AssistantChatbot = () => {
               {message.role === 'user' ? 'You' : 'AI Assistant'}
             </StyledMessageHeader>
             <StyledMessageContent role={message.role}>
-              {message.content}
+              {message.role === 'assistant' ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {message.content}
+                </ReactMarkdown>
+              ) : (
+                message.content
+              )}
             </StyledMessageContent>
           </StyledMessage>
         ))}
@@ -310,15 +523,29 @@ export const AssistantChatbot = () => {
         {isLoading && (
           <StyledMessage role="assistant">
             <StyledMessageHeader>AI Assistant</StyledMessageHeader>
-            <StyledLoadingDots>
-              <span />
-              <span />
-              <span />
-            </StyledLoadingDots>
+            <StyledShimmer>
+              <StyledShimmerLine width="90%" />
+              <StyledShimmerLine width="75%" />
+              <StyledShimmerLine width="85%" />
+            </StyledShimmer>
           </StyledMessage>
         )}
         <div ref={messagesEndRef} />
       </StyledMessagesContainer>
+
+      {messages.length === 0 && (
+        <StyledSuggestionsContainer>
+          {SUGGESTIONS.map((suggestion, index) => (
+            <StyledSuggestionChip
+              key={index}
+              onClick={() => handleSuggestionClick(suggestion.text)}
+            >
+              <suggestion.icon size={16} />
+              {suggestion.text}
+            </StyledSuggestionChip>
+          ))}
+        </StyledSuggestionsContainer>
+      )}
 
       <form onSubmit={handleSubmit}>
         <StyledInputWrapper>
