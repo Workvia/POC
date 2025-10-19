@@ -1,6 +1,7 @@
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 
 import { currentWorkspaceState } from '@/auth/states/currentWorkspaceState';
+import { invalidAvatarUrlsState } from 'twenty-ui/display';
 import { ImageInput } from '@/ui/input/components/ImageInput';
 import {
   useUpdateWorkspaceMutation,
@@ -15,6 +16,7 @@ export const WorkspaceLogoUploader = () => {
   const [currentWorkspace, setCurrentWorkspace] = useRecoilState(
     currentWorkspaceState,
   );
+  const setInvalidAvatarUrls = useSetRecoilState(invalidAvatarUrlsState);
 
   const onUpload = async (file: File) => {
     if (isUndefinedOrNull(file)) {
@@ -28,10 +30,23 @@ export const WorkspaceLogoUploader = () => {
         file,
       },
       onCompleted: (data) => {
+        const newLogoPath = buildSignedPath(data.uploadWorkspaceLogo);
+
+        // Clear any invalid avatar URL cache to ensure new logo loads
+        setInvalidAvatarUrls([]);
+
         setCurrentWorkspace({
           ...currentWorkspace,
-          logo: buildSignedPath(data.uploadWorkspaceLogo),
+          logo: newLogoPath,
         });
+
+        // Force favicon refresh by adding timestamp
+        const favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+        if (favicon) {
+          const url = new URL(favicon.href, window.location.origin);
+          url.searchParams.set('t', Date.now().toString());
+          favicon.href = url.toString();
+        }
       },
     });
   };
