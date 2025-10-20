@@ -239,12 +239,10 @@
       "packages/twenty-emails",
       "packages/twenty-ui",
       "packages/twenty-utils",
-      "packages/twenty-zapier",
-      "packages/twenty-website",
       "packages/twenty-e2e-testing",
       "packages/twenty-shared",
-      "packages/twenty-apps",
-      "packages/twenty-cli",
+      "packages/agent-backend",
+      "packages/ai-gateway",
       "tools/eslint-rules"
     ]
   }
