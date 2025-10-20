@@ -54,9 +54,15 @@ msgid "{fieldName} and {fieldName}Id cannot be both provided."
 msgstr "{fieldName} と {fieldName}Id の両方を提供することはできません。"
 
 #. js-lingui-id: ZkHTHm
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-index-metadata-validator.service.ts
 #: src/engine/metadata-modules/index-metadata/utils/validate-can-create-unique-index.util.ts
 msgid "{fieldType} fields cannot be unique."
 msgstr "{fieldType} フィールドは一意であることを許可されていません。"
+
+#. js-lingui-id: LeIJhm
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-index-metadata-validator.service.ts
+msgid "{fieldType} fields cannot have a default value."
+msgstr ""
 
 #. js-lingui-id: iEZavm
 #: src/engine/core-modules/dns-manager/services/dns-manager.service.ts
@@ -238,7 +244,6 @@ msgstr "タイムラインに表示される集計／フィルタされたイベ
 #: src/engine/workspace-manager/standard-objects-prefill-data/views/workflow-runs-all.view.ts
 #: src/engine/workspace-manager/standard-objects-prefill-data/views/tasks-all.view.ts
 #: src/engine/workspace-manager/standard-objects-prefill-data/views/people-all.view.ts
-#: src/engine/workspace-manager/standard-objects-prefill-data/views/opportunities-all.view.ts
 #: src/engine/workspace-manager/standard-objects-prefill-data/views/notes-all.view.ts
 #: src/engine/workspace-manager/standard-objects-prefill-data/views/dashboards-all.view.ts
 #: src/engine/workspace-manager/standard-objects-prefill-data/views/custom-all.view.ts
@@ -246,20 +251,15 @@ msgstr "タイムラインに表示される集計／フィルタされたイベ
 msgid "All {objectLabelPlural}"
 msgstr "{objectLabelPlural}すべて"
 
-#. js-lingui-id: hehnjM
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Amount"
-msgstr "金額"
-
 #. js-lingui-id: MjyFvC
 #: src/modules/attachment/standard-objects/attachment.workspace-entity.ts
 msgid "An attachment"
 msgstr "添付ファイル"
 
-#. js-lingui-id: Q7akko
+#. js-lingui-id: eW83iC
 #: src/modules/messaging/message-import-manager/drivers/microsoft/exceptions/microsoft-import-driver.exception.ts
-msgid "An error occurred during message import"
-msgstr "メッセージのインポート中にエラーが発生しました"
+msgid "An error occurred during messages import"
+msgstr ""
 
 #. js-lingui-id: XyOToQ
 #: src/engine/core-modules/graphql/utils/generate-graphql-error-from-error.util.ts
@@ -271,11 +271,6 @@ msgstr "エラーが発生しました。"
 #: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-index-metadata-validator.service.ts
 msgid "An index must contain at least one field"
 msgstr "インデックスには少なくとも1つのフィールドが必要です"
-
-#. js-lingui-id: bZq8rL
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "An opportunity"
-msgstr "商談"
 
 #. js-lingui-id: JKWicb
 #: src/modules/company/standard-objects/company.workspace-entity.ts
@@ -374,11 +369,6 @@ msgstr "添付ファイル名"
 msgid "Attachment note"
 msgstr "添付ファイルのメモ"
 
-#. js-lingui-id: YASWpH
-#: src/modules/attachment/standard-objects/attachment.workspace-entity.ts
-msgid "Attachment opportunity"
-msgstr "添付ファイルの商談"
-
 #. js-lingui-id: P38yED
 #: src/modules/attachment/standard-objects/attachment.workspace-entity.ts
 msgid "Attachment person"
@@ -403,7 +393,6 @@ msgstr "添付ファイルのワークフロー"
 #: src/modules/workflow/common/standard-objects/workflow.workspace-entity.ts
 #: src/modules/task/standard-objects/task.workspace-entity.ts
 #: src/modules/person/standard-objects/person.workspace-entity.ts
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
 #: src/modules/note/standard-objects/note.workspace-entity.ts
 #: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
 #: src/modules/company/standard-objects/company.workspace-entity.ts
@@ -431,11 +420,6 @@ msgstr "連絡先に関連する添付ファイル"
 #: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
 msgid "Attachments linked to the dashboard"
 msgstr "ダッシュボードに関連する添付ファイル"
-
-#. js-lingui-id: kw0mLu
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Attachments linked to the opportunity"
-msgstr "商談に関連する添付ファイル"
 
 #. js-lingui-id: 83l3Yd
 #: src/modules/workflow/common/standard-objects/workflow.workspace-entity.ts
@@ -530,12 +514,6 @@ msgstr "ブロックリスト"
 #: src/modules/note/standard-objects/note.workspace-entity.ts
 msgid "Body"
 msgstr "本文"
-
-#. js-lingui-id: 6+byWT
-#: src/engine/workspace-manager/standard-objects-prefill-data/views/opportunity-table-by-stage.view.ts
-#: src/engine/workspace-manager/standard-objects-prefill-data/views/opportunity-by-stage.view.ts
-msgid "By Stage"
-msgstr "ステージ別"
 
 #. js-lingui-id: jQX8V+
 #: src/engine/workspace-manager/standard-objects-prefill-data/views/tasks-by-status.view.ts
@@ -682,11 +660,6 @@ msgstr "チャンネルタイプ"
 msgid "City"
 msgstr "市"
 
-#. js-lingui-id: NRF7pg
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Close date"
-msgstr "締切日"
-
 #. js-lingui-id: 96YB1a
 #: src/modules/workspace-member/standard-objects/workspace-member.workspace-entity.ts
 msgid "Color Scheme"
@@ -706,7 +679,6 @@ msgstr "会社"
 #: src/modules/timeline/standard-objects/timeline-activity.workspace-entity.ts
 #: src/modules/task/standard-objects/task-target.workspace-entity.ts
 #: src/modules/person/standard-objects/person.workspace-entity.ts
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
 #: src/modules/note/standard-objects/note-target.workspace-entity.ts
 #: src/modules/favorite/standard-objects/favorite.workspace-entity.ts
 #: src/modules/company/standard-objects/company.workspace-entity.ts
@@ -812,7 +784,7 @@ msgid "Contradicting field permissions have been detected on a relation field ({
 msgstr "相反するフィールドアクセス権が関係フィールド ({fieldName}) に検出されました。"
 
 #. js-lingui-id: LZf/L8
-#: src/engine/core-modules/common/utils/find-flat-entity-by-id-in-flat-entity-maps-or-throw.util.ts
+#: src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-id-in-flat-entity-maps-or-throw.util.ts
 msgid "Could not find flat entity in maps"
 msgstr "マップでフラットなエンティティが見つかりませんでした"
 
@@ -830,7 +802,6 @@ msgstr "インデックス関連オブジェクトメタデータが見つかり
 #: src/modules/workflow/common/standard-objects/workflow.workspace-entity.ts
 #: src/modules/task/standard-objects/task.workspace-entity.ts
 #: src/modules/person/standard-objects/person.workspace-entity.ts
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
 #: src/modules/note/standard-objects/note.workspace-entity.ts
 #: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
 #: src/modules/company/standard-objects/company.workspace-entity.ts
@@ -1123,11 +1094,6 @@ msgstr "イベント名"
 msgid "Event note"
 msgstr "イベントメモ"
 
-#. js-lingui-id: eSt759
-#: src/modules/timeline/standard-objects/timeline-activity.workspace-entity.ts
-msgid "Event opportunity"
-msgstr "イベント商談"
-
 #. js-lingui-id: aicVfT
 #: src/modules/calendar/common/standard-objects/calendar-event.workspace-entity.ts
 #: src/modules/calendar/common/standard-objects/calendar-event.workspace-entity.ts
@@ -1244,11 +1210,6 @@ msgstr "お気に入りフォルダ"
 msgid "Favorite note"
 msgstr "お気に入りのメモ"
 
-#. js-lingui-id: RRr9Bp
-#: src/modules/favorite/standard-objects/favorite.workspace-entity.ts
-msgid "Favorite opportunity"
-msgstr "お気に入りの商談"
-
 #. js-lingui-id: RM6B6V
 #: src/modules/favorite/standard-objects/favorite.workspace-entity.ts
 msgid "Favorite person"
@@ -1291,7 +1252,6 @@ msgstr "お気に入りのワークスペースメンバー"
 #: src/modules/workflow/common/standard-objects/workflow-run.workspace-entity.ts
 #: src/modules/task/standard-objects/task.workspace-entity.ts
 #: src/modules/person/standard-objects/person.workspace-entity.ts
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
 #: src/modules/note/standard-objects/note.workspace-entity.ts
 #: src/modules/favorite-folder/standard-objects/favorite-folder.workspace-entity.ts
 #: src/modules/favorite/standard-objects/favorite.workspace-entity.ts
@@ -1325,11 +1285,6 @@ msgstr "ダッシュボードに関連するお気に入り"
 #: src/modules/note/standard-objects/note.workspace-entity.ts
 msgid "Favorites linked to the note"
 msgstr "メモに関連するお気に入り"
-
-#. js-lingui-id: 9zd8hg
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Favorites linked to the opportunity"
-msgstr "商談に関連するお気に入り"
 
 #. js-lingui-id: L5ccWD
 #: src/modules/task/standard-objects/task.workspace-entity.ts
@@ -1415,6 +1370,8 @@ msgid "Field Metadata Id"
 msgstr "フィールドメタデータID"
 
 #. js-lingui-id: MPt365
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
 #: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-filter-validator.service.ts
 #: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-filter-validator.service.ts
 #: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-filter-validator.service.ts
@@ -1645,6 +1602,7 @@ msgstr "インデックス関連オブジェクトが見つかりませんでし
 
 #. js-lingui-id: fY2zUQ
 #: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-index-metadata-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/builders/index/workspace-migration-v2-index-actions-builder.service.ts
 msgid "Index to delete not found"
 msgstr "削除するインデックスが見つかりません"
 
@@ -1961,11 +1919,6 @@ msgstr "関連レコードID"
 msgid "Linkedin"
 msgstr "LinkedIn"
 
-#. js-lingui-id: LeFv/R
-#: src/modules/person/standard-objects/person.workspace-entity.ts
-msgid "List of opportunities for which that person is the point of contact"
-msgstr "その人物が連絡先である商談のリスト"
-
 #. js-lingui-id: wJijgU
 #: src/modules/calendar/common/standard-objects/calendar-event.workspace-entity.ts
 #: src/modules/calendar/common/standard-objects/calendar-event.workspace-entity.ts
@@ -2193,6 +2146,7 @@ msgstr "マルチセレクトフィールドのデフォルト値は配列であ
 
 #. js-lingui-id: 6rLmLu
 #: src/engine/api/graphql/graphql-query-runner/resolvers/graphql-query-create-many-resolver.service.ts
+#: src/engine/api/common/common-query-runners/common-create-many-query-runner/utils/get-matching-record-id.util.ts
 msgid "Multiple records found with the same unique field values for {conflictingFieldsValues}. Cannot determine which record to update."
 msgstr "{ConflictingFieldsValues} のために同一フィールド値を持つ複数のレコードが見つかりました。どのレコードを更新するか判断できません。"
 
@@ -2203,7 +2157,6 @@ msgstr "{ConflictingFieldsValues} のために同一フィールド値を持つ�
 #: src/modules/workflow/common/standard-objects/workflow-run.workspace-entity.ts
 #: src/modules/view/standard-objects/view.workspace-entity.ts
 #: src/modules/person/standard-objects/person.workspace-entity.ts
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
 #: src/modules/messaging/common/standard-objects/message-folder.workspace-entity.ts
 #: src/modules/favorite-folder/standard-objects/favorite-folder.workspace-entity.ts
 #: src/modules/company/standard-objects/company.workspace-entity.ts
@@ -2370,7 +2323,6 @@ msgstr "ノートのタイトル"
 
 #. js-lingui-id: 1DBGsz
 #: src/modules/person/standard-objects/person.workspace-entity.ts
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
 #: src/modules/note/standard-objects/note.workspace-entity.ts
 #: src/modules/company/standard-objects/company.workspace-entity.ts
 #: src/engine/twenty-orm/custom.workspace-entity.ts
@@ -2392,11 +2344,6 @@ msgstr "会社に関連するノート"
 msgid "Notes tied to the contact"
 msgstr "連絡先に関連するノート"
 
-#. js-lingui-id: 0bi/Eh
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Notes tied to the opportunity"
-msgstr "商談に関連するノート"
-
 #. js-lingui-id: B2Y6QU
 #: src/modules/note/standard-objects/note-target.workspace-entity.ts
 msgid "NoteTarget company"
@@ -2406,11 +2353,6 @@ msgstr "ノートターゲット会社"
 #: src/modules/note/standard-objects/note-target.workspace-entity.ts
 msgid "NoteTarget note"
 msgstr "ノートターゲットノート"
-
-#. js-lingui-id: DTs4tO
-#: src/modules/note/standard-objects/note-target.workspace-entity.ts
-msgid "NoteTarget opportunity"
-msgstr "ノートターゲット商談"
 
 #. js-lingui-id: gBwbnk
 #: src/modules/note/standard-objects/note-target.workspace-entity.ts
@@ -2521,63 +2463,6 @@ msgstr "レコードを開く場所"
 #: src/modules/view/standard-objects/view-filter.workspace-entity.ts
 msgid "Operand"
 msgstr "オペランド"
-
-#. js-lingui-id: 4MyDFl
-#: src/modules/person/standard-objects/person.workspace-entity.ts
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-#: src/modules/company/standard-objects/company.workspace-entity.ts
-msgid "Opportunities"
-msgstr "商談"
-
-#. js-lingui-id: 5QgKbT
-#: src/modules/company/standard-objects/company.workspace-entity.ts
-msgid "Opportunities linked to the company."
-msgstr "会社に紐付けられた商談。"
-
-#. js-lingui-id: SV/iis
-#: src/modules/timeline/standard-objects/timeline-activity.workspace-entity.ts
-#: src/modules/task/standard-objects/task-target.workspace-entity.ts
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-#: src/modules/note/standard-objects/note-target.workspace-entity.ts
-#: src/modules/favorite/standard-objects/favorite.workspace-entity.ts
-#: src/modules/attachment/standard-objects/attachment.workspace-entity.ts
-msgid "Opportunity"
-msgstr "\"商談\""
-
-#. js-lingui-id: WnMlKn
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Opportunity amount"
-msgstr "\"商談金額\""
-
-#. js-lingui-id: aj3fnv
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Opportunity close date"
-msgstr "\"商談の終了日\""
-
-#. js-lingui-id: 3NYczb
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Opportunity company"
-msgstr "\"商談企業\""
-
-#. js-lingui-id: as45IN
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Opportunity point of contact"
-msgstr "\"商談の担当者\""
-
-#. js-lingui-id: 5Nu7Uw
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Opportunity probability"
-msgstr "\"商談の確度\""
-
-#. js-lingui-id: Q1dzBp
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Opportunity record position"
-msgstr "\"商談レコードの位置\""
-
-#. js-lingui-id: 5ugYS3
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Opportunity stage"
-msgstr "\"商談ステージ\""
 
 #. js-lingui-id: 2mFkfl
 #: src/engine/metadata-modules/flat-field-metadata/validators/utils/validate-enum-flat-field-metadata.util.ts
@@ -2741,11 +2626,6 @@ msgstr "メールアカウントを設定するために接続詳細を提供し
 msgid "Please select a valid connection type (IMAP, SMTP, or CalDAV) and try again."
 msgstr "有効な接続タイプ (IMAP、SMTP、またはCalDAV) を選択し、もう一度お試しください。"
 
-#. js-lingui-id: P04j61
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Point of Contact"
-msgstr "\"担当者\""
-
 #. js-lingui-id: p/78dY
 #: src/modules/workspace-member/standard-objects/workspace-member.workspace-entity.ts
 #: src/modules/workflow/common/standard-objects/workflow.workspace-entity.ts
@@ -2756,7 +2636,6 @@ msgstr "\"担当者\""
 #: src/modules/view/standard-objects/view-field.workspace-entity.ts
 #: src/modules/task/standard-objects/task.workspace-entity.ts
 #: src/modules/person/standard-objects/person.workspace-entity.ts
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
 #: src/modules/note/standard-objects/note.workspace-entity.ts
 #: src/modules/favorite-folder/standard-objects/favorite-folder.workspace-entity.ts
 #: src/modules/favorite/standard-objects/favorite.workspace-entity.ts
@@ -2792,11 +2671,6 @@ msgstr "\"好みのカラースキーム\""
 #: src/modules/workspace-member/standard-objects/workspace-member.workspace-entity.ts
 msgid "Preferred language"
 msgstr "\"好みの言語\""
-
-#. js-lingui-id: WJIL29
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Probability"
-msgstr "\"確率\""
 
 #. js-lingui-id: dtGxRz
 #: src/engine/core-modules/record-transformer/utils/transform-phones-value.util.ts
@@ -3022,11 +2896,6 @@ msgstr "提供された情報の一部が無効です。入力を確認しても
 msgid "Some of the permissions you selected are not valid. Please try again with valid permission settings."
 msgstr "選択した権限の一部が無効です。 有効な権限設定を試してください。"
 
-#. js-lingui-id: 3PRxO3
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Stage"
-msgstr "ステージ"
-
 #. js-lingui-id: dc5N0o
 #: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-field-metadata-validator.service.ts
 msgid "Standard fields cannot be deleted"
@@ -3204,7 +3073,6 @@ msgstr "タスクのタイトル"
 #. js-lingui-id: GtycJ/
 #: src/modules/task/standard-objects/task.workspace-entity.ts
 #: src/modules/person/standard-objects/person.workspace-entity.ts
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
 #: src/modules/company/standard-objects/company.workspace-entity.ts
 #: src/engine/twenty-orm/custom.workspace-entity.ts
 msgid "Tasks"
@@ -3230,20 +3098,10 @@ msgstr "会社に結びつけられたタスク"
 msgid "Tasks tied to the contact"
 msgstr "連絡先に結びつけられたタスク"
 
-#. js-lingui-id: 1TfX9U
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Tasks tied to the opportunity"
-msgstr "商談に結びつけられたタスク"
-
 #. js-lingui-id: pP0Dt9
 #: src/modules/task/standard-objects/task-target.workspace-entity.ts
 msgid "TaskTarget company"
 msgstr "タスクターゲットの会社"
-
-#. js-lingui-id: UJ2aPi
-#: src/modules/task/standard-objects/task-target.workspace-entity.ts
-msgid "TaskTarget opportunity"
-msgstr "タスクターゲットの商談"
 
 #. js-lingui-id: I1MiSs
 #: src/modules/task/standard-objects/task-target.workspace-entity.ts
@@ -3300,7 +3158,6 @@ msgstr "会社のウェブサイトのURLです。このURLを使用して会社
 #: src/modules/workflow/common/standard-objects/workflow.workspace-entity.ts
 #: src/modules/task/standard-objects/task.workspace-entity.ts
 #: src/modules/person/standard-objects/person.workspace-entity.ts
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
 #: src/modules/note/standard-objects/note.workspace-entity.ts
 #: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
 #: src/modules/company/standard-objects/company.workspace-entity.ts
@@ -3358,11 +3215,6 @@ msgstr "この名前は使用できません。"
 #: src/engine/metadata-modules/object-permission/field-permission/field-permission.service.ts
 msgid "The object you are trying to set permissions for could not be found. It may have been deleted."
 msgstr "権限を設定しようとしているオブジェクトが見つかりません。それは削除された可能性があります。"
-
-#. js-lingui-id: DbWmKZ
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "The opportunity name"
-msgstr "商談名"
 
 #. js-lingui-id: Zi9X+u
 #: src/engine/metadata-modules/role/role.service.ts
@@ -3525,7 +3377,6 @@ msgstr "タイムゾーン"
 #: src/modules/workflow/common/standard-objects/workflow-run.workspace-entity.ts
 #: src/modules/timeline/standard-objects/timeline-activity.workspace-entity.ts
 #: src/modules/task/standard-objects/task.workspace-entity.ts
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
 #: src/modules/note/standard-objects/note.workspace-entity.ts
 #: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
 #: src/modules/company/standard-objects/company.workspace-entity.ts
@@ -3547,11 +3398,6 @@ msgstr "ダッシュボードにリンクされたタイムライン活動"
 #: src/modules/note/standard-objects/note.workspace-entity.ts
 msgid "Timeline Activities linked to the note."
 msgstr "メモにリンクしたタイムライン活動。"
-
-#. js-lingui-id: p6feIz
-#: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
-msgid "Timeline Activities linked to the opportunity."
-msgstr "商談にリンクしたタイムライン活動。"
 
 #. js-lingui-id: yvPwuF
 #: src/modules/workflow/common/standard-objects/workflow-run.workspace-entity.ts
@@ -3609,6 +3455,12 @@ msgstr "タイプ"
 #: src/engine/metadata-modules/field-metadata/services/field-metadata.service.ts
 msgid "Unique field cannot have a default value"
 msgstr "一意のフィールドにはデフォルト値を設定できません"
+
+#. js-lingui-id: WWSSTx
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-index-metadata-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-index-metadata-validator.service.ts
+msgid "Unique index cannot be created for field {fieldName} of type {fieldType}"
+msgstr ""
 
 #. js-lingui-id: EBZdX5
 #: src/modules/workflow/workflow-trigger/utils/compute-cron-pattern-from-schedule.ts
@@ -3956,6 +3808,16 @@ msgstr "ビューフィルタ"
 msgid "View Group"
 msgstr "ビューグループ"
 
+#. js-lingui-id: MGbEFN
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
+msgid "View group metadata already exists"
+msgstr ""
+
+#. js-lingui-id: lbyQO4
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
+msgid "View group metadata with id {flatViewGroupId} already exists"
+msgstr ""
+
 #. js-lingui-id: uQ3c2q
 #: src/modules/view/standard-objects/view-group.workspace-entity.ts
 msgid "View Group related view"
@@ -3965,6 +3827,43 @@ msgstr "ビューグループの関連ビュー"
 #: src/modules/view/standard-objects/view-group.workspace-entity.ts
 msgid "View Group target field"
 msgstr "ビューグループの対象フィールド"
+
+#. js-lingui-id: tdtXoB
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
+msgid "View group to delete has not been soft deleted"
+msgstr ""
+
+#. js-lingui-id: JdAvYa
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
+#: src/engine/metadata-modules/flat-view-group/utils/from-delete-view-group-input-to-flat-view-group-or-throw.util.ts
+msgid "View group to delete not found"
+msgstr ""
+
+#. js-lingui-id: 34hWb7
+#: src/engine/metadata-modules/flat-view-group/utils/from-destroy-view-group-input-to-flat-view-group-or-throw.util.ts
+msgid "View group to destroy not found"
+msgstr ""
+
+#. js-lingui-id: UP/TXo
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
+#: src/engine/metadata-modules/flat-view-group/utils/from-update-view-group-input-to-flat-view-group-to-update-or-throw.util.ts
+msgid "View group to update not found"
+msgstr ""
+
+#. js-lingui-id: XbOhpY
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
+msgid "View group to update parent field not found"
+msgstr ""
+
+#. js-lingui-id: P0grPG
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
+msgid "View group to update parent view not found"
+msgstr ""
 
 #. js-lingui-id: b1Vc+l
 #: src/modules/view/standard-objects/view-group.workspace-entity.ts
@@ -4003,6 +3902,8 @@ msgstr "ビューの名前"
 #: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-validator.service.ts
 #: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-validator.service.ts
 #: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-group-validator.service.ts
 #: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-filter-validator.service.ts
 #: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-filter-validator.service.ts
 #: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-field-validator.service.ts
