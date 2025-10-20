@@ -50,7 +50,7 @@ const StyledContentContainer = styled.div<{ isInRightDrawer: boolean }>`
   overflow-y: auto;
   background: ${({ theme }) => theme.background.primary};
   padding-bottom: ${({ theme, isInRightDrawer }) =>
-    isInRightDrawer ? theme.spacing(16) : 0};
+    isInRightDrawer ? theme.spacing(3) : 0};
 `;
 
 type ShowPageSubContainerProps = {

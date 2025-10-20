@@ -1,8 +1,18 @@
 import styled from '@emotion/styled';
-import { IconPaperclip, IconChevronDown, IconSend, IconPlus, IconCheck, IconCopy } from 'twenty-ui/display';
+import { IconPaperclip, IconChevronDown, IconSend, IconPlus, IconCheck, IconCopy, IconSearch, IconX, IconWorld } from 'twenty-ui/display';
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useFindManyRecords } from '@/object-record/hooks/useFindManyRecords';
+import { getLogoUrlFromDomainName } from 'twenty-shared/utils';
+import { getCompanyDomainName } from '@/object-metadata/utils/getCompanyDomainName';
+
+type SelectedItem = {
+  id: string;
+  name: string;
+  type: 'company' | 'file';
+  logo?: string;
+};
 
 const StyledChatContainer = styled.div`
   display: flex;
@@ -106,8 +116,8 @@ const StyledInputWrapper = styled.div`
   background: ${({ theme }) => theme.background.tertiary};
   border: 1px solid ${({ theme }) => theme.border.color.medium};
   border-radius: 12px;
-  padding: 16px;
-  margin: 16px 24px;
+  padding: 16px 16px 10px 16px;
+  margin: 16px 24px 12px 24px;
 `;
 
 const StyledInputArea = styled.textarea`
@@ -143,18 +153,29 @@ const StyledLeftButtons = styled.div`
 const StyledButton = styled.button`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 8px 14px;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
+  height: 32px;
+  padding: 0 14px;
+  background: ${({ theme }) => theme.background.transparent.light};
+  border: 1px solid ${({ theme }) => theme.border.color.medium};
+  border-radius: 50px;
   color: ${({ theme }) => theme.font.color.secondary};
   cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s;
+  white-space: nowrap;
 
   &:hover {
-    background: ${({ theme }) => theme.background.transparent.light};
+    background: ${({ theme }) => theme.background.transparent.medium};
+    border-color: ${({ theme }) => theme.border.color.strong};
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
   }
 `;
 
@@ -162,22 +183,24 @@ const StyledSendButton = styled.button<{ disabled: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px 24px;
+  height: 32px;
+  padding: 0 20px;
   background: ${({ theme, disabled }) =>
-    disabled ? theme.background.tertiary : theme.color.blue};
-  border: none;
-  border-radius: 8px;
-  color: white;
+    disabled ? theme.background.transparent.medium : theme.color.blue};
+  border: ${({ theme, disabled }) =>
+    disabled ? `1px solid ${theme.border.color.medium}` : 'none'};
+  border-radius: 50px;
+  color: ${({ theme, disabled }) =>
+    disabled ? theme.font.color.tertiary : 'white'};
   cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   transition: all 0.2s;
-  opacity: ${({ disabled }) => (disabled ? 0.5 : 1)};
+  white-space: nowrap;
 
   &:hover:not(:disabled) {
     background: ${({ theme }) => theme.color.blue70};
-    transform: translateY(-1px);
+    transform: scale(1.02);
   }
 `;
 
@@ -370,6 +393,250 @@ const StyledCopyButton = styled.button<{ copied: boolean }>`
   }
 `;
 
+// Popover Container
+const StyledPopoverContainer = styled.div`
+  position: relative;
+`;
+
+// Popover - min-w-[240px] space-y-1 p-2.5 px-1.5 text-sm
+const StyledPopover = styled.div<{ isOpen: boolean }>`
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  width: 300px;
+  background: ${({ theme }) => theme.background.noisy};
+  border: 1px solid ${({ theme }) => theme.border.color.light};
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 8px 6px;
+  display: ${({ isOpen }) => (isOpen ? 'flex' : 'none')};
+  flex-direction: column;
+  gap: 2px;
+  z-index: 1000;
+  font-size: 14px;
+`;
+
+// text-secondary-foreground/55 mb-2 px-1 text-xs font-medium
+const StyledPopoverHeader = styled.div`
+  color: ${({ theme }) => theme.font.color.tertiary};
+  opacity: 0.55;
+  margin-bottom: 4px;
+  margin-top: 8px;
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+
+  &:first-of-type {
+    margin-top: 4px;
+  }
+`;
+
+// flex cursor-pointer items-center gap-2 px-1 py-1
+const StyledPopoverItem = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: ${({ theme }) => theme.font.color.primary};
+  transition: background 0.2s;
+
+  &:hover {
+    background: ${({ theme }) => theme.background.transparent.light};
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+`;
+
+// Switch component
+const StyledSwitch = styled.input`
+  appearance: none;
+  width: 36px;
+  height: 20px;
+  margin-left: auto;
+  background: ${({ theme }) => theme.background.transparent.medium};
+  border: 1px solid ${({ theme }) => theme.border.color.medium};
+  border-radius: 12px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.2s;
+  }
+
+  &:checked {
+    background: ${({ theme }) => theme.color.blue};
+    border-color: ${({ theme }) => theme.color.blue};
+
+    &::after {
+      left: 18px;
+    }
+  }
+`;
+
+// Input - mt-1.5
+const StyledSearchInput = styled.input`
+  width: 100%;
+  max-width: 100%;
+  padding: 7px 10px;
+  margin-top: 6px;
+  background: ${({ theme }) => theme.background.transparent.light};
+  border: 1px solid ${({ theme }) => theme.border.color.light};
+  border-radius: 8px;
+  color: ${({ theme }) => theme.font.color.primary};
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: ${({ theme }) => theme.color.blue};
+  }
+
+  &::placeholder {
+    color: ${({ theme }) => theme.font.color.tertiary};
+  }
+`;
+
+// Company/File list item with avatar
+const StyledListItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: ${({ theme }) => theme.background.transparent.light};
+  }
+`;
+
+const StyledAvatar = styled.div<{ src?: string }>`
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  background: ${({ theme, src }) =>
+    src ? `url(${src}) center/cover` : theme.background.transparent.medium};
+  border: 1px solid ${({ theme }) => theme.border.color.light};
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.font.color.tertiary};
+`;
+
+const StyledListItemName = styled.span`
+  font-size: 13px;
+  color: ${({ theme }) => theme.font.color.primary};
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+// Chips container
+const StyledChipsContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+`;
+
+// Individual chip - styled like file attachment
+const StyledChip = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: ${({ theme }) => theme.background.transparent.light};
+  border: 1px solid ${({ theme }) => theme.border.color.light};
+  border-radius: 12px;
+  font-size: 13px;
+  color: ${({ theme }) => theme.font.color.primary};
+  width: fit-content;
+  max-width: 280px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+`;
+
+const StyledChipContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+`;
+
+const StyledChipAvatar = styled.div<{ src?: string }>`
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  background: ${({ theme, src }) =>
+    src ? `url(${src}) center/cover` : theme.background.transparent.medium};
+  border: 1px solid ${({ theme }) => theme.border.color.light};
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.font.color.tertiary};
+`;
+
+const StyledChipName = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.font.color.primary};
+`;
+
+const StyledChipRemove = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: ${({ theme }) => theme.font.color.tertiary};
+  opacity: 0.6;
+  flex-shrink: 0;
+  border-radius: 4px;
+  transition: all 0.15s;
+
+  &:hover {
+    opacity: 1;
+    background: ${({ theme }) => theme.background.transparent.light};
+    color: ${({ theme }) => theme.font.color.primary};
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+`;
+
 type Message = {
   id: string;
   role: 'user' | 'assistant';
@@ -398,7 +665,45 @@ export const AssistantChatbot = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [expandedReasoning, setExpandedReasoning] = useState<Set<string>>(new Set());
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [showSourcesPopup, setShowSourcesPopup] = useState(false);
+  const [webSearch, setWebSearch] = useState(false);
+  const [appsAndIntegrations, setAppsAndIntegrations] = useState(false);
+  const [files, setFiles] = useState<any[]>([]);
+  const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  // Fetch companies from twenty-backend
+  const { records: companies = [] } = useFindManyRecords({
+    objectNameSingular: 'company',
+    limit: 50,
+  });
+
+  const handleSelectCompany = (company: any) => {
+    const logoUrl = getLogoUrlFromDomainName(getCompanyDomainName(company) ?? '');
+    const newItem: SelectedItem = {
+      id: company.id,
+      name: company.name,
+      type: 'company',
+      logo: logoUrl,
+    };
+    setSelectedItems(prev => [...prev, newItem]);
+    setShowSourcesPopup(false);
+  };
+
+  const handleSelectFile = (file: any) => {
+    const newItem: SelectedItem = {
+      id: file.id,
+      name: file.name,
+      type: 'file',
+    };
+    setSelectedItems(prev => [...prev, newItem]);
+    setShowSourcesPopup(false);
+  };
+
+  const handleRemoveItem = (id: string) => {
+    setSelectedItems(prev => prev.filter(item => item.id !== id));
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -407,6 +712,32 @@ export const AssistantChatbot = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Close popover when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        setShowSourcesPopup(false);
+      }
+    };
+
+    if (showSourcesPopup) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSourcesPopup]);
+
+  // Mock files data (files API integration to be implemented)
+  useEffect(() => {
+    setFiles([
+      { id: '1', name: 'Q4 Report.pdf', type: 'pdf' },
+      { id: '2', name: 'Meeting Notes.docx', type: 'doc' },
+      { id: '3', name: 'Budget 2025.xlsx', type: 'xlsx' },
+    ]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -638,19 +969,6 @@ export const AssistantChatbot = () => {
   return (
     <StyledChatContainer>
       <StyledMessagesContainer>
-        {messages.length === 0 && (
-          <StyledMessage role="assistant">
-            <StyledMessageContent role="assistant">
-              Hi! I'm your AI assistant powered by Claude. I can help you with:
-              {'\n\n'}• Finding and managing contacts and companies
-              {'\n'}• Understanding your workflows and automations
-              {'\n'}• Answering questions about your CRM data
-              {'\n'}• Providing insights and recommendations
-              {'\n\n'}How can I help you today?
-            </StyledMessageContent>
-          </StyledMessage>
-        )}
-
         {messages.map((message) => (
           <StyledMessage key={message.id} role={message.role}>
             <StyledMessageHeader>
@@ -743,22 +1061,32 @@ export const AssistantChatbot = () => {
         <div ref={messagesEndRef} />
       </StyledMessagesContainer>
 
-      {messages.length === 0 && (
-        <StyledSuggestionsContainer>
-          {SUGGESTIONS.map((suggestion, index) => (
-            <StyledSuggestionChip
-              key={index}
-              onClick={() => handleSuggestionClick(suggestion.text)}
-            >
-              <suggestion.icon size={16} />
-              {suggestion.text}
-            </StyledSuggestionChip>
-          ))}
-        </StyledSuggestionsContainer>
-      )}
-
       <form onSubmit={handleSubmit}>
         <StyledInputWrapper>
+          {selectedItems.length > 0 && (
+            <StyledChipsContainer>
+              {selectedItems.map((item) => (
+                <StyledChip key={item.id}>
+                  <StyledChipContent>
+                    {item.logo ? (
+                      <StyledChipAvatar src={item.logo} />
+                    ) : (
+                      <StyledChipAvatar>
+                        {item.type === 'file' ? 'F' : item.name.charAt(0)}
+                      </StyledChipAvatar>
+                    )}
+                    <StyledChipName>{item.name}</StyledChipName>
+                  </StyledChipContent>
+                  <StyledChipRemove
+                    type="button"
+                    onClick={() => handleRemoveItem(item.id)}
+                  >
+                    <IconX />
+                  </StyledChipRemove>
+                </StyledChip>
+              ))}
+            </StyledChipsContainer>
+          )}
           <StyledInputArea
             placeholder="Ask anything..."
             value={input}
@@ -774,16 +1102,72 @@ export const AssistantChatbot = () => {
           <StyledButtonRow>
             <StyledLeftButtons>
               <StyledButton type="button">
-                <IconPaperclip size={18} />
+                <IconPaperclip size={16} />
                 Attach
               </StyledButton>
-              <StyledButton type="button">
-                Sources
-                <IconChevronDown size={18} />
-              </StyledButton>
+              <StyledPopoverContainer>
+                <StyledButton
+                  type="button"
+                  onClick={() => setShowSourcesPopup(!showSourcesPopup)}
+                >
+                  <IconWorld size={16} />
+                  Sources
+                </StyledButton>
+
+                <StyledPopover isOpen={showSourcesPopup} ref={popoverRef}>
+                  <StyledPopoverHeader>Sources</StyledPopoverHeader>
+
+                  <StyledPopoverItem>
+                    <IconSearch size={18} />
+                    Web search
+                    <StyledSwitch
+                      type="checkbox"
+                      checked={webSearch}
+                      onChange={(e) => setWebSearch(e.target.checked)}
+                    />
+                  </StyledPopoverItem>
+
+                  <StyledPopoverItem>
+                    <IconSearch size={18} />
+                    Apps and integrations
+                    <StyledSwitch
+                      type="checkbox"
+                      checked={appsAndIntegrations}
+                      onChange={(e) => setAppsAndIntegrations(e.target.checked)}
+                    />
+                  </StyledPopoverItem>
+
+                  <StyledSearchInput
+                    type="text"
+                    placeholder="Search clients, files..."
+                  />
+
+                  <StyledPopoverHeader>Clients</StyledPopoverHeader>
+                  {companies.map((company) => {
+                    const logoUrl = getLogoUrlFromDomainName(getCompanyDomainName(company) ?? '');
+                    return (
+                      <StyledListItem key={company.id} onClick={() => handleSelectCompany(company)}>
+                        <StyledAvatar src={logoUrl}>
+                          {!logoUrl && company.name?.charAt(0)}
+                        </StyledAvatar>
+                        <StyledListItemName>{company.name}</StyledListItemName>
+                      </StyledListItem>
+                    );
+                  })}
+
+                  <StyledPopoverHeader>Files</StyledPopoverHeader>
+                  {files.map((file) => (
+                    <StyledListItem key={file.id} onClick={() => handleSelectFile(file)}>
+                      <StyledAvatar>
+                        {file.type.toUpperCase().substring(0, 3)}
+                      </StyledAvatar>
+                      <StyledListItemName>{file.name}</StyledListItemName>
+                    </StyledListItem>
+                  ))}
+                </StyledPopover>
+              </StyledPopoverContainer>
             </StyledLeftButtons>
             <StyledSendButton type="submit" disabled={!input.trim() || isLoading}>
-              <IconSend size={18} />
               {isLoading ? 'Sending...' : 'Send'}
             </StyledSendButton>
           </StyledButtonRow>

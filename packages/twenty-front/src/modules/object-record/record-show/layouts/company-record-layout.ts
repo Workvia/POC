@@ -4,20 +4,6 @@ import { type RecordLayout } from '@/object-record/record-show/types/RecordLayou
 
 export const COMPANY_RECORD_LAYOUT: RecordLayout = {
   tabs: {
-    assistant: {
-      title: 'Assistant',
-      position: 150,
-      icon: 'IconSparkles',
-      cards: [{ type: CardType.AssistantCard }],
-      hide: {
-        ifMobile: false,
-        ifDesktop: false,
-        ifInRightDrawer: false,
-        ifFeaturesDisabled: [],
-        ifRequiredObjectsInactive: [],
-        ifRelationsMissing: [],
-      },
-    },
     workflows: {
       title: 'Workflows',
       position: 250,
@@ -29,6 +15,20 @@ export const COMPANY_RECORD_LAYOUT: RecordLayout = {
         ifInRightDrawer: false,
         ifFeaturesDisabled: [],
         ifRequiredObjectsInactive: [CoreObjectNameSingular.Workflow],
+        ifRelationsMissing: [],
+      },
+    },
+    assistant: {
+      title: 'Assistant',
+      position: 50,
+      icon: 'IconSparkles',
+      cards: [{ type: CardType.AssistantCard }],
+      hide: {
+        ifMobile: false,
+        ifDesktop: false,
+        ifInRightDrawer: false,
+        ifFeaturesDisabled: [],
+        ifRequiredObjectsInactive: [],
         ifRelationsMissing: [],
       },
     },

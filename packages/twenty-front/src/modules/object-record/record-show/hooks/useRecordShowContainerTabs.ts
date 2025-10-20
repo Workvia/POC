@@ -101,27 +101,31 @@ export const useRecordShowContainerTabs = (
           hide: shouldHide,
         };
       })
-      // When isInRightDrawer === true, we merge first and second tab into first tab
+      // When isInRightDrawer === true, create a Home tab with fields
       .reduce<SingleTabProps[]>((acc, tab, index, array) => {
         if (isInRightDrawer && array.length > 1) {
-          if (index === 0) {
-            return [
-              ...acc,
-              {
-                id: 'home',
-                title: 'Home',
-                Icon: IconHome,
-                cards: [
-                  ...(tab.hide ? [] : tab.cards),
-                  ...(array[1].hide ? [] : array[1].cards),
-                ],
-                hide: false,
-              },
-            ];
+          // Find the fields tab
+          const fieldsTabIndex = array.findIndex((t) => t.id === 'fields');
+          const fieldsTab = fieldsTabIndex >= 0 ? array[fieldsTabIndex] : null;
+
+          // On first iteration, add Home tab with fields
+          if (index === 0 && fieldsTab) {
+            acc.push({
+              id: 'home',
+              title: 'Home',
+              Icon: IconHome,
+              cards: fieldsTab.hide ? [] : fieldsTab.cards,
+              hide: false,
+            });
           }
-          if (index === 1) {
+
+          // Skip the fields tab since it's already in Home
+          if (tab.id === 'fields') {
             return acc;
           }
+
+          // Add all other tabs normally
+          return [...acc, tab];
         }
         return [...acc, tab];
       }, []),
