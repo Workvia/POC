@@ -12,8 +12,8 @@ const StyledColumn = styled.div`
   background-color: ${({ theme }) => theme.background.primary};
   display: flex;
   flex-direction: column;
-  max-width: 200px;
-  min-width: 200px;
+  max-width: 360px;
+  min-width: 360px;
   min-height: 100%;
   flex: 1;
   padding: ${({ theme }) => theme.spacing(2)};

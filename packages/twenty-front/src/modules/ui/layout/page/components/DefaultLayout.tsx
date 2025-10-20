@@ -64,6 +64,9 @@ export const DefaultLayout = () => {
   const showAuthModal = useShowAuthModal();
   const useShowFullScreen = useShowFullscreen();
 
+  // Check if we're in embed mode (for iframe)
+  const isEmbedMode = new URLSearchParams(window.location.search).get('embed') === 'true';
+
   return (
     <>
       <Global
@@ -83,7 +86,7 @@ export const DefaultLayout = () => {
               duration: theme.animation.duration.normal,
             }}
           >
-            {!showAuthModal && (
+            {!showAuthModal && !isEmbedMode && (
               <>
                 <CommandMenuRouter />
                 <KeyboardShortcutMenu />
@@ -91,7 +94,7 @@ export const DefaultLayout = () => {
             )}
             {showAuthModal ? (
               <StyledAppNavigationDrawerMock />
-            ) : useShowFullScreen ? null : (
+            ) : useShowFullScreen || isEmbedMode ? null : (
               <StyledAppNavigationDrawer />
             )}
             {showAuthModal ? (
@@ -115,7 +118,7 @@ export const DefaultLayout = () => {
               </StyledMainContainer>
             )}
           </StyledPageContainer>
-          {isMobile && !showAuthModal && <MobileNavigationBar />}
+          {isMobile && !showAuthModal && !isEmbedMode && <MobileNavigationBar />}
         </AppErrorBoundary>
       </StyledLayout>
     </>

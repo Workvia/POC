@@ -20,6 +20,7 @@ export enum AppPath {
   Index = '/',
   TasksPage = '/objects/tasks',
   AssistantPage = '/assistant',
+  DocumentsPage = '/documents',
 
   RecordIndexPage = '/objects/:objectNamePlural',
   RecordShowPage = '/object/:objectNameSingular/:objectRecordId',

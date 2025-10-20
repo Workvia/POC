@@ -1,5 +1,6 @@
 import styled from '@emotion/styled';
 import { type ReactNode, useMemo } from 'react';
+import { MOBILE_VIEWPORT } from 'twenty-ui/theme';
 
 import { useObjectNameSingularFromPlural } from '@/object-metadata/hooks/useObjectNameSingularFromPlural';
 import { ObjectFilterDropdownComponentInstanceContext } from '@/object-record/object-filter-dropdown/states/contexts/ObjectFilterDropdownComponentInstanceContext';
@@ -55,6 +56,10 @@ const StyledBar = styled.div`
   padding-top: ${({ theme }) => theme.spacing(1)};
   padding-bottom: ${({ theme }) => theme.spacing(1)};
   z-index: 4;
+
+  @media (max-width: ${MOBILE_VIEWPORT}px) {
+    display: none;
+  }
 `;
 
 const StyledChipContainer = styled.div`

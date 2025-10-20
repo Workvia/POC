@@ -18,6 +18,7 @@ import {
 } from 'twenty-shared/utils';
 import { type IconComponent } from 'twenty-ui/display';
 import { useIsMobile } from 'twenty-ui/utilities';
+import { MOBILE_VIEWPORT } from 'twenty-ui/theme';
 
 const StyledDragDropPlaceholderCell = styled(
   RecordTableDragAndDropPlaceholderCell,
@@ -53,6 +54,10 @@ const StyledRecordTableDraggableTr = styled.div`
   }
 
   width: 100%;
+
+  @media (max-width: ${MOBILE_VIEWPORT}px) {
+    display: none;
+  }
 `;
 
 const StyledIconContainer = styled.div`

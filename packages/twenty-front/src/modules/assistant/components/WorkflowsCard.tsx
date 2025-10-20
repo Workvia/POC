@@ -1,39 +1,28 @@
 import styled from '@emotion/styled';
-import { Trans } from '@lingui/react/macro';
-import {
-  AnimatedPlaceholder,
-  AnimatedPlaceholderEmptyContainer,
-  AnimatedPlaceholderEmptySubTitle,
-  AnimatedPlaceholderEmptyTextContainer,
-  AnimatedPlaceholderEmptyTitle,
-  EMPTY_PLACEHOLDER_TRANSITION_PROPS,
-} from 'twenty-ui/layout';
 
 const StyledContainer = styled.div`
   display: flex;
   flex: 1;
   flex-direction: column;
   height: 100%;
-  overflow: auto;
+  overflow: hidden;
+`;
+
+const StyledIframe = styled.iframe`
+  width: 100%;
+  height: 100%;
+  border: none;
+  flex: 1;
 `;
 
 export const WorkflowsCard = () => {
   return (
     <StyledContainer>
-      <AnimatedPlaceholderEmptyContainer
-        // eslint-disable-next-line react/jsx-props-no-spreading
-        {...EMPTY_PLACEHOLDER_TRANSITION_PROPS}
-      >
-        <AnimatedPlaceholder type="noNote" />
-        <AnimatedPlaceholderEmptyTextContainer>
-          <AnimatedPlaceholderEmptyTitle>
-            <Trans>No Workflows</Trans>
-          </AnimatedPlaceholderEmptyTitle>
-          <AnimatedPlaceholderEmptySubTitle>
-            <Trans>There are no workflows associated with this record yet.</Trans>
-          </AnimatedPlaceholderEmptySubTitle>
-        </AnimatedPlaceholderEmptyTextContainer>
-      </AnimatedPlaceholderEmptyContainer>
+      <StyledIframe
+        src="/objects/workflows?embed=true"
+        title="Workflows"
+        allow="clipboard-read; clipboard-write"
+      />
     </StyledContainer>
   );
 };

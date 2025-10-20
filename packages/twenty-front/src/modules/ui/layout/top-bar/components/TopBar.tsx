@@ -1,5 +1,6 @@
 import styled from '@emotion/styled';
 import { type ReactNode } from 'react';
+import { MOBILE_VIEWPORT } from 'twenty-ui/theme';
 
 type TopBarProps = {
   className?: string;
@@ -40,6 +41,10 @@ const StyledRightSection = styled.div`
   display: flex;
   font-weight: ${({ theme }) => theme.font.weight.regular};
   gap: ${({ theme }) => theme.betweenSiblingsGap};
+
+  @media (max-width: ${MOBILE_VIEWPORT}px) {
+    display: none;
+  }
 `;
 
 export const TopBar = ({

@@ -17,14 +17,6 @@ const StyledTitle = styled.div<{ hideTitle?: boolean }>`
   height: ${({ theme }) => theme.spacing(8)};
   padding-left: ${({ theme }) => theme.spacing(2)};
   padding-right: ${({ theme }) => theme.spacing(2)};
-
-  ${({ hideTitle }) =>
-    hideTitle &&
-    css`
-      @media (max-width: ${MOBILE_VIEWPORT}px) {
-        display: none;
-      }
-    `}
 `;
 
 const StyledIcon = styled.div`

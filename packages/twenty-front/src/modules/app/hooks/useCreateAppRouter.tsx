@@ -17,9 +17,11 @@ import { Assistant } from '~/pages/assistant/Assistant';
 import { Authorize } from '~/pages/auth/Authorize';
 import { PasswordReset } from '~/pages/auth/PasswordReset';
 import { SignInUp } from '~/pages/auth/SignInUp';
+import { Documents } from '~/pages/documents/Documents';
 import { NotFound } from '~/pages/not-found/NotFound';
 import { RecordIndexPage } from '~/pages/object-record/RecordIndexPage';
 import { RecordShowPage } from '~/pages/object-record/RecordShowPage';
+import { WorkflowsTableOnlyPage } from '~/pages/object-record/__internal_wf_tbl_7x9k2m';
 import { BookCall } from '~/pages/onboarding/BookCall';
 import { BookCallDecision } from '~/pages/onboarding/BookCallDecision';
 import { ChooseYourPlan } from '~/pages/onboarding/ChooseYourPlan';
@@ -63,8 +65,13 @@ export const useCreateAppRouter = (
           <Route path={AppPath.BookCall} element={<BookCall />} />
           <Route path={indexAppPath.getIndexAppPath()} element={<></>} />
           <Route path={AppPath.AssistantPage} element={<Assistant />} />
+          <Route path={AppPath.DocumentsPage} element={<Documents />} />
           <Route path={AppPath.RecordIndexPage} element={<RecordIndexPage />} />
           <Route path={AppPath.RecordShowPage} element={<RecordShowPage />} />
+          <Route
+            path="/__internal_wf_tbl_7x9k2m"
+            element={<WorkflowsTableOnlyPage />}
+          />
           <Route
             path={AppPath.SettingsCatchAll}
             element={

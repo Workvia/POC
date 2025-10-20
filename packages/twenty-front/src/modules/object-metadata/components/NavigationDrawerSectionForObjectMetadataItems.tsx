@@ -13,12 +13,13 @@ import { useLocation } from 'react-router-dom';
 import { AppPath } from 'twenty-shared/types';
 import { useLingui } from '@lingui/react/macro';
 import { useRecoilValue } from 'recoil';
+import { IconFileText } from 'twenty-ui/display';
 
 const ORDERED_STANDARD_OBJECTS: string[] = [
   CoreObjectNameSingular.Person,
   CoreObjectNameSingular.Company,
   CoreObjectNameSingular.Task,
-  CoreObjectNameSingular.Note,
+  CoreObjectNameSingular.Workflow,
 ];
 
 type NavigationDrawerSectionForObjectMetadataItemsProps = {
@@ -42,7 +43,10 @@ export const NavigationDrawerSectionForObjectMetadataItems = ({
   const { objectPermissionsByObjectMetadataId } = useObjectPermissions();
 
   const sortedStandardObjectMetadataItems = [...objectMetadataItems]
-    .filter((item) => ORDERED_STANDARD_OBJECTS.includes(item.nameSingular))
+    .filter((item) =>
+      ORDERED_STANDARD_OBJECTS.includes(item.nameSingular) &&
+      item.nameSingular !== CoreObjectNameSingular.Note
+    )
     .sort((objectMetadataItemA, objectMetadataItemB) => {
       const indexA = ORDERED_STANDARD_OBJECTS.indexOf(
         objectMetadataItemA.nameSingular,
@@ -59,7 +63,10 @@ export const NavigationDrawerSectionForObjectMetadataItems = ({
     });
 
   const sortedCustomObjectMetadataItems = [...objectMetadataItems]
-    .filter((item) => !ORDERED_STANDARD_OBJECTS.includes(item.nameSingular))
+    .filter((item) =>
+      !ORDERED_STANDARD_OBJECTS.includes(item.nameSingular) &&
+      item.nameSingular !== CoreObjectNameSingular.Note
+    )
     .sort((objectMetadataItemA, objectMetadataItemB) => {
       return new Date(objectMetadataItemA.createdAt) <
         new Date(objectMetadataItemB.createdAt)
@@ -117,6 +124,24 @@ export const NavigationDrawerSectionForObjectMetadataItems = ({
                     Icon={IconAssistant}
                     to={AppPath.AssistantPage}
                     active={isAssistantActive}
+                  />
+                );
+              }
+
+              // If this is the Workflow item and we're in the Workspace section (not Remote),
+              // inject the Documents item right after it
+              if (
+                !isRemote &&
+                objectMetadataItem.nameSingular === CoreObjectNameSingular.Workflow
+              ) {
+                const isDocumentsActive = currentPath === AppPath.DocumentsPage;
+                items.push(
+                  <NavigationDrawerItem
+                    key="navigation-drawer-item-documents"
+                    label={t`Documents`}
+                    Icon={IconFileText}
+                    to={AppPath.DocumentsPage}
+                    active={isDocumentsActive}
                   />
                 );
               }
