@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI SDK v5 Test</title>
+  <script type="module">
+    import { useChat } from 'https://esm.sh/@ai-sdk/react@2.0.76';
+    import { createElement } from 'https://esm.sh/react@18.3.1';
+    import { createRoot } from 'https://esm.sh/react-dom@18.3.1/client';
+
+    function TestChat() {
+      const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+        api: 'http://localhost:3333/test-chat',
+      });
+
+      return createElement('div', { style: { padding: '20px', fontFamily: 'monospace' } }, [
+        createElement('h1', { key: 'title' }, 'AI SDK v5 + Express Test'),
+        createElement('div', { key: 'messages', style: { marginBottom: '20px', minHeight: '200px', border: '1px solid #ccc', padding: '10px' } },
+          messages.length === 0
+            ? 'No messages yet. Send a message to test!'
+            : messages.map((m, i) =>
+                createElement('div', { key: i, style: { marginBottom: '10px' } }, [
+                  createElement('strong', { key: 'role' }, m.role + ': '),
+                  createElement('span', { key: 'content' }, m.content)
+                ])
+              )
+        ),
+        createElement('form', { key: 'form', onSubmit: handleSubmit, style: { display: 'flex', gap: '10px' } }, [
+          createElement('input', {
+            key: 'input',
+            type: 'text',
+            value: input,
+            onChange: handleInputChange,
+            placeholder: 'Type a message...',
+            disabled: isLoading,
+            style: { flex: 1, padding: '8px', fontSize: '14px' }
+          }),
+          createElement('button', {
+            key: 'button',
+            type: 'submit',
+            disabled: isLoading,
+            style: { padding: '8px 16px', fontSize: '14px' }
+          }, isLoading ? 'Loading...' : 'Send')
+        ])
+      ]);
+    }
+
+    const root = createRoot(document.getElementById('root'));
+    root.render(createElement(TestChat));
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>

@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import { anthropic } from '@ai-sdk/anthropic';
-import { streamText } from 'ai';
+import { streamText, convertToModelMessages } from 'ai';
 import dotenv from 'dotenv';
-import { listExistingSkills } from './skills-manager.js';
+import { uploadAndGetSkillIds, listExistingSkills } from './skills-manager.js';
 
 dotenv.config();
 
@@ -15,10 +15,11 @@ async function initializeSkills() {
   console.log('[Skills] Initializing insurance knowledge base...');
 
   try {
-    // Get existing skills from Anthropic API
-    const existingSkills = await listExistingSkills(process.env.ANTHROPIC_API_KEY);
-    insuranceSkillIds = existingSkills;
+    // Upload skills from .claude/skills directory
+    const uploadedSkills = await uploadAndGetSkillIds(process.env.ANTHROPIC_API_KEY);
+    insuranceSkillIds = uploadedSkills;
     console.log(`[Skills] Ready with ${insuranceSkillIds.length} insurance skills`);
+    console.log('[Skills] Skill IDs:', JSON.stringify(insuranceSkillIds, null, 2));
   } catch (error) {
     console.error('[Skills] Error initializing skills:', error.message);
   }
@@ -53,6 +54,10 @@ app.post('/api/chat', async (req, res) => {
     }
 
     console.log(`[Chat] Received ${messages.length} messages`);
+    console.log('[Chat] Messages format:', JSON.stringify(messages, null, 2));
+
+    // Use AI SDK's convertToModelMessages to convert UIMessage[] to ModelMessage[]
+    const modelMessages = convertToModelMessages(messages);
 
     const systemPrompt = `You are an AI assistant integrated into an insurance management platform. Your role is to help insurance professionals efficiently answer insurance questions, understand their documents and policies, manage client relationships, reduce busywork, and streamline workflows.
 
@@ -114,26 +119,27 @@ You have access to comprehensive California insurance knowledge through speciali
 
 Your goal is to make insurance professionals more efficient and effective in serving their clients.`;
 
-    // Build Skills configuration for AI SDK
-    const skillsConfig = insuranceSkillIds.length > 0
-      ? insuranceSkillIds.slice(0, 8).map(skill => ({
-          type: 'custom',
-          skillId: skill.id,
-          version: 'latest'
-        }))
-      : [];
+    // Use first 4 custom insurance skills
+    const skillsConfig = insuranceSkillIds.slice(0, 4).map(skill => ({
+      type: 'custom',
+      skillId: skill.id
+    }));
 
-    console.log(`[Chat] Using ${skillsConfig.length} insurance knowledge skills`);
+    console.log(`[Chat] Using ${skillsConfig.length} custom insurance skill(s)`);
+    if (skillsConfig.length > 0) {
+      console.log('[Chat] Skills:', insuranceSkillIds.slice(0, 4).map(s => s.name).join(', '));
+    }
 
-    // Use AI SDK streamText with Anthropic provider
+    // Use AI SDK streamText with Anthropic provider + Skills
     const result = streamText({
       model: anthropic('claude-sonnet-4-5-20250929'),
-      messages,
+      messages: modelMessages,
       system: systemPrompt,
-      maxTokens: 8000,
+      // Don't set maxTokens - let Anthropic decide when using Skills
       tools: {
         code_execution: anthropic.tools.codeExecution_20250825(),
       },
+      // Enable Skills - testing with 2 skills first
       providerOptions: {
         anthropic: {
           container: skillsConfig.length > 0
@@ -143,39 +149,12 @@ Your goal is to make insurance professionals more efficient and effective in ser
       }
     });
 
-    // Convert to Data Stream Response and pipe to Express response
-    const dataStreamResponse = result.toDataStreamResponse();
+    console.log('[Chat] Piping UI message stream to response...');
 
-    // Set headers from the Data Stream Response
-    res.status(dataStreamResponse.status);
-    dataStreamResponse.headers.forEach((value, key) => {
-      res.setHeader(key, value);
-    });
+    // Use AI SDK's built-in method for Express - handles ALL protocol details!
+    result.pipeUIMessageStreamToResponse(res);
 
-    // Pipe the body stream to Express response
-    const reader = dataStreamResponse.body.getReader();
-    const pump = async () => {
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) {
-            res.end();
-            console.log('[Chat] Stream completed successfully');
-            break;
-          }
-          res.write(value);
-        }
-      } catch (error) {
-        console.error('[Chat] Streaming error:', error);
-        if (!res.headersSent) {
-          res.status(500).json({ error: error.message });
-        } else {
-          res.end();
-        }
-      }
-    };
-
-    pump();
+    console.log('[Chat] Stream piping completed');
   } catch (error) {
     console.error('[Chat] Error:', error);
     res.status(500).json({ error: error.message || 'Internal server error' });

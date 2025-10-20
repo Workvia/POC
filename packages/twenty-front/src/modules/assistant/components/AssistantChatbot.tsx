@@ -3,6 +3,8 @@ import { IconPaperclip, IconChevronDown, IconSend, IconPlus, IconCheck, IconCopy
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { useFindManyRecords } from '@/object-record/hooks/useFindManyRecords';
 import { getLogoUrlFromDomainName } from 'twenty-shared/utils';
 import { getCompanyDomainName } from '@/object-metadata/utils/getCompanyDomainName';
@@ -660,9 +662,32 @@ const SUGGESTIONS = [
 ];
 
 export const AssistantChatbot = () => {
+  // Use AI SDK useChat hook with proper transport and protocol
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
+      api: 'http://localhost:3002/api/chat',
+    }),
+    streamProtocol: 'data', // AI SDK v5 uses data stream protocol
+  });
+
+  // Manual input state (new AI SDK v5 doesn't include input management)
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const isLoading = status === 'in_progress';
+
+  // Helper function to extract text content from UIMessage format
+  const getMessageText = (message: any) => {
+    if (message.content) return message.content; // Old format
+    if (message.parts) {
+      // New AI SDK v5 format with parts array
+      return message.parts
+        .filter((part: any) => part.type === 'text')
+        .map((part: any) => part.text)
+        .join('');
+    }
+    return '';
+  };
+
+  // Additional UI state
   const [expandedReasoning, setExpandedReasoning] = useState<Set<string>>(new Set());
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [showSourcesPopup, setShowSourcesPopup] = useState(false);
@@ -739,118 +764,13 @@ export const AssistantChatbot = () => {
     ]);
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Handle message submission
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (!input?.trim() || isLoading) return;
 
-    const userMessage = input.trim();
-    setInput('');
-    setIsLoading(true);
-
-    // Add user message
-    const newUserMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: userMessage
-    };
-    setMessages(prev => [...prev, newUserMessage]);
-
-    try {
-      // Call backend API
-      const response = await fetch('http://localhost:3002/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [...messages, newUserMessage].map(m => ({
-            role: m.role,
-            content: m.content
-          })),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
-      // Create assistant message for streaming
-      const assistantMessageId = (Date.now() + 1).toString();
-      setMessages(prev => [...prev, {
-        id: assistantMessageId,
-        role: 'assistant',
-        content: ''
-      }]);
-
-      if (reader) {
-        let fullText = '';
-        const reasoningSteps: string[] = [];
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-
-          // Parse AI SDK data stream format
-          const lines = chunk.split('\n');
-          for (const line of lines) {
-            if (line.startsWith('0:')) {
-              // Text chunk - parse JSON to properly handle escaped characters
-              try {
-                const text = JSON.parse(line.substring(2));
-                fullText += text;
-
-                setMessages(prev => {
-                  const newMessages = [...prev];
-                  const lastMsg = newMessages[newMessages.length - 1];
-                  if (lastMsg.role === 'assistant') {
-                    lastMsg.content = fullText;
-                    lastMsg.reasoningSteps = reasoningSteps.length > 0 ? [...reasoningSteps] : undefined;
-                  }
-                  return newMessages;
-                });
-              } catch (e) {
-                // Skip malformed lines
-                console.warn('Failed to parse stream line:', line);
-              }
-            } else if (line.startsWith('8:')) {
-              // Reasoning chunk - tool usage events
-              try {
-                const reasoning = JSON.parse(line.substring(2));
-                reasoningSteps.push(reasoning);
-
-                setMessages(prev => {
-                  const newMessages = [...prev];
-                  const lastMsg = newMessages[newMessages.length - 1];
-                  if (lastMsg.role === 'assistant') {
-                    lastMsg.reasoningSteps = [...reasoningSteps];
-                  }
-                  return newMessages;
-                });
-              } catch (e) {
-                console.warn('Failed to parse reasoning line:', line);
-              }
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error calling API:', error);
-      setMessages(prev => {
-        const filtered = prev.filter(m => m.content !== '');
-        return [...filtered, {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: 'Sorry, I encountered an error connecting to the AI assistant. Please make sure the backend server is running on port 3002.',
-        }];
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    sendMessage({ text: input.trim() });
+    setInput(''); // Clear input after sending
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1016,13 +936,13 @@ export const AssistantChatbot = () => {
               {message.role === 'assistant' ? (
                 <>
                   {/* Copy Button - Top Right Corner */}
-                  {message.content && (
+                  {getMessageText(message) && (
                     <StyledCopyButton
                       copied={copiedMessageId === message.id}
                       data-tooltip={copiedMessageId === message.id ? 'Copied!' : 'Copy'}
                       onClick={async () => {
                         try {
-                          await navigator.clipboard.writeText(message.content);
+                          await navigator.clipboard.writeText(getMessageText(message));
                           setCopiedMessageId(message.id);
                           setTimeout(() => setCopiedMessageId(null), 2000);
                         } catch (err) {
@@ -1038,11 +958,11 @@ export const AssistantChatbot = () => {
                     </StyledCopyButton>
                   )}
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {message.content}
+                    {getMessageText(message)}
                   </ReactMarkdown>
                 </>
               ) : (
-                message.content
+                getMessageText(message)
               )}
             </StyledMessageContent>
           </StyledMessage>
@@ -1089,7 +1009,7 @@ export const AssistantChatbot = () => {
           )}
           <StyledInputArea
             placeholder="Ask anything..."
-            value={input}
+            value={input || ''}
             onChange={(e) => {
               e.stopPropagation();
               setInput(e.target.value);
@@ -1167,7 +1087,7 @@ export const AssistantChatbot = () => {
                 </StyledPopover>
               </StyledPopoverContainer>
             </StyledLeftButtons>
-            <StyledSendButton type="submit" disabled={!input.trim() || isLoading}>
+            <StyledSendButton type="submit" disabled={!input?.trim() || isLoading}>
               {isLoading ? 'Sending...' : 'Send'}
             </StyledSendButton>
           </StyledButtonRow>
