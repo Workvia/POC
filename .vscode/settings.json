@@ -50,5 +50,13 @@
     ".cursorrules": "markdown"
   },
   "jestrunner.codeLensSelector": "**/*.{test,spec,integration-spec}.{js,jsx,ts,tsx}",
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "claude.mcpServers": {
+    "context7": {
+      "command": "node",
+      "args": [
+        "/Users/grant/Library/Application Support/Claude/Claude Extensions/context7/dist/index.js"
+      ]
+    }
+  }
 }

@@ -1,15 +1,11 @@
 import express from 'express';
 import cors from 'cors';
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropic } from '@ai-sdk/anthropic';
+import { streamText } from 'ai';
 import dotenv from 'dotenv';
-import { uploadAndGetSkillIds, listExistingSkills } from './skills-manager.js';
+import { listExistingSkills } from './skills-manager.js';
 
 dotenv.config();
-
-// Initialize Anthropic client with beta headers
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
-});
 
 // Store uploaded skill IDs
 let insuranceSkillIds = [];
@@ -19,17 +15,9 @@ async function initializeSkills() {
   console.log('[Skills] Initializing insurance knowledge base...');
 
   try {
-    // First, check if we already have skills uploaded
+    // Get existing skills from Anthropic API
     const existingSkills = await listExistingSkills(process.env.ANTHROPIC_API_KEY);
-
-    if (existingSkills.length > 0) {
-      console.log(`[Skills] Found ${existingSkills.length} existing skills, using those`);
-      insuranceSkillIds = existingSkills;
-    } else {
-      console.log('[Skills] No existing skills found, uploading new ones...');
-      insuranceSkillIds = await uploadAndGetSkillIds(process.env.ANTHROPIC_API_KEY);
-    }
-
+    insuranceSkillIds = existingSkills;
     console.log(`[Skills] Ready with ${insuranceSkillIds.length} insurance skills`);
   } catch (error) {
     console.error('[Skills] Error initializing skills:', error.message);
@@ -46,7 +34,7 @@ app.use(express.json());
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'AI Agent Backend',
+    service: 'AI Agent Backend (AI SDK v5)',
     skills: insuranceSkillIds.length
   });
 });
@@ -126,60 +114,68 @@ You have access to comprehensive California insurance knowledge through speciali
 
 Your goal is to make insurance professionals more efficient and effective in serving their clients.`;
 
-    // Prepare Anthropic API request with Skills
-    const requestParams = {
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 8000,
-      messages: messages,
-      system: systemPrompt,
-      stream: true,
-      betas: ['code-execution-2025-08-25', 'skills-2025-10-02', 'files-api-2025-04-14'],
-      tools: [
-        {
-          type: 'code_execution_20250825',
-          name: 'code_execution'
-        }
-      ]
-    };
-
-    // Add Skills container if we have skills
-    if (insuranceSkillIds.length > 0) {
-      requestParams.container = {
-        skills: insuranceSkillIds.slice(0, 8).map(skill => ({
+    // Build Skills configuration for AI SDK
+    const skillsConfig = insuranceSkillIds.length > 0
+      ? insuranceSkillIds.slice(0, 8).map(skill => ({
           type: 'custom',
-          skill_id: skill.id,
+          skillId: skill.id,
           version: 'latest'
         }))
-      };
-      console.log(`[Chat] Using ${Math.min(insuranceSkillIds.length, 8)} insurance knowledge skills`);
-    }
+      : [];
 
-    // Set headers for streaming
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    res.setHeader('Transfer-Encoding', 'chunked');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
+    console.log(`[Chat] Using ${skillsConfig.length} insurance knowledge skills`);
 
-    // Stream the response using Anthropic SDK
-    try {
-      const stream = await anthropic.beta.messages.create(requestParams);
-
-      for await (const event of stream) {
-        if (event.type === 'content_block_delta' && event.delta?.text) {
-          // AI SDK data stream format: "0:" prefix for text chunks
-          const text = event.delta.text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
-          res.write(`0:"${text}"\n`);
+    // Use AI SDK streamText with Anthropic provider
+    const result = streamText({
+      model: anthropic('claude-sonnet-4-5-20250929'),
+      messages,
+      system: systemPrompt,
+      maxTokens: 8000,
+      tools: {
+        code_execution: anthropic.tools.codeExecution_20250825(),
+      },
+      providerOptions: {
+        anthropic: {
+          container: skillsConfig.length > 0
+            ? { skills: skillsConfig }
+            : undefined
         }
       }
-      res.end();
-      console.log('[Chat] Stream completed successfully');
-    } catch (streamError) {
-      console.error('[Chat] Streaming error:', streamError);
-      console.error('[Chat] Error details:', streamError.message);
-      if (streamError.response) {
-        console.error('[Chat] Response:', await streamError.response.text());
+    });
+
+    // Convert to Data Stream Response and pipe to Express response
+    const dataStreamResponse = result.toDataStreamResponse();
+
+    // Set headers from the Data Stream Response
+    res.status(dataStreamResponse.status);
+    dataStreamResponse.headers.forEach((value, key) => {
+      res.setHeader(key, value);
+    });
+
+    // Pipe the body stream to Express response
+    const reader = dataStreamResponse.body.getReader();
+    const pump = async () => {
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            res.end();
+            console.log('[Chat] Stream completed successfully');
+            break;
+          }
+          res.write(value);
+        }
+      } catch (error) {
+        console.error('[Chat] Streaming error:', error);
+        if (!res.headersSent) {
+          res.status(500).json({ error: error.message });
+        } else {
+          res.end();
+        }
       }
-      res.status(500).end();
-    }
+    };
+
+    pump();
   } catch (error) {
     console.error('[Chat] Error:', error);
     res.status(500).json({ error: error.message || 'Internal server error' });
@@ -188,7 +184,7 @@ Your goal is to make insurance professionals more efficient and effective in ser
 
 // Start server and initialize skills
 app.listen(PORT, async () => {
-  console.log(`\n🤖 AI Agent Backend running on http://localhost:${PORT}`);
+  console.log(`\n🤖 AI Agent Backend (AI SDK v5) running on http://localhost:${PORT}`);
   console.log(`📡 Chat endpoint: http://localhost:${PORT}/api/chat`);
   console.log(`💚 Health check: http://localhost:${PORT}/health\n`);
 
