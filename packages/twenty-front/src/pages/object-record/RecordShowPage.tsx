@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 
 import { RecordShowActionMenu } from '@/action-menu/components/RecordShowActionMenu';
 import { ActionMenuComponentInstanceContext } from '@/action-menu/states/contexts/ActionMenuComponentInstanceContext';
@@ -14,6 +14,10 @@ import { PageBody } from '@/ui/layout/page/components/PageBody';
 import { PageContainer } from '@/ui/layout/page/components/PageContainer';
 import { RecordShowPageHeader } from '~/pages/object-record/RecordShowPageHeader';
 import { RecordShowPageTitle } from '~/pages/object-record/RecordShowPageTitle';
+import { AppPath } from 'twenty-shared/types';
+
+// This is the ID of the Proposal Generation workflow from prefill-workflows.ts
+const PROPOSAL_GENERATION_WORKFLOW_ID = '8b213cac-a68b-4ffe-817a-3ec994e9932d';
 
 export const RecordShowPage = () => {
   const parameters = useParams<{
@@ -25,6 +29,14 @@ export const RecordShowPage = () => {
     parameters.objectNameSingular ?? '',
     parameters.objectRecordId ?? '',
   );
+
+  // Redirect to custom Proposal Generation page if this is the Proposal Generation workflow
+  if (
+    objectNameSingular === 'workflow' &&
+    objectRecordId === PROPOSAL_GENERATION_WORKFLOW_ID
+  ) {
+    return <Navigate to={AppPath.ProposalGenerationPage} replace />;
+  }
 
   const recordShowComponentInstanceId =
     computeRecordShowComponentInstanceId(objectRecordId);

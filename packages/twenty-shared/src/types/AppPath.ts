@@ -21,6 +21,7 @@ export enum AppPath {
   TasksPage = '/objects/tasks',
   AssistantPage = '/assistant',
   DocumentsPage = '/documents',
+  ProposalGenerationPage = '/proposal-generation',
 
   RecordIndexPage = '/objects/:objectNamePlural',
   RecordShowPage = '/object/:objectNameSingular/:objectRecordId',

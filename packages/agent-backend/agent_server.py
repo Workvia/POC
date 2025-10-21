@@ -126,6 +126,7 @@ async def chat(request: Request):
             return {"error": "No messages provided"}
 
         print(f"[Agent] Received {len(messages)} messages")
+        print(f"[Agent] Messages format: {messages}")
 
         from anthropic import Anthropic
 

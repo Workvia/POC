@@ -15,7 +15,7 @@ import { RecordIndexTableContainerEffect } from '@/object-record/record-index/co
 import { RecordIndexFiltersToContextStoreEffect } from '@/object-record/record-index/components/RecordIndexFiltersToContextStoreEffect';
 import { RecordIndexLoadBaseOnContextStoreEffect } from '@/object-record/record-index/components/RecordIndexLoadBaseOnContextStoreEffect';
 import { ViewComponentInstanceContext } from '@/views/states/contexts/ViewComponentInstanceContext';
-import { useHandleIndexIdentifierClick } from '@/object-record/record-index/hooks/useHandleIndexIdentifierClick';
+import { useWorkflowsIndexIdentifierClick } from './hooks/useWorkflowsIndexIdentifierClick';
 import { useRecoilCallback } from 'recoil';
 import { lastShowPageRecordIdState } from '@/object-record/record-field/ui/states/lastShowPageRecordId';
 import { SpreadsheetImportProvider } from '@/spreadsheet-import/provider/components/SpreadsheetImportProvider';
@@ -44,7 +44,7 @@ export const WorkflowsTableOnlyPage = () => {
     [],
   );
 
-  const { indexIdentifierUrl } = useHandleIndexIdentifierClick({
+  const { indexIdentifierUrl } = useWorkflowsIndexIdentifierClick({
     objectMetadataItem,
     recordIndexId,
   });

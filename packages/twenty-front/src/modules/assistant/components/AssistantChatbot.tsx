@@ -59,18 +59,122 @@ const StyledMessageContent = styled.div<{ role: 'user' | 'assistant' }>`
     padding-right: 48px;
   `}
 
-  /* Markdown styling */
-  p {
-    margin: 8px 0;
+  /* Markdown styling - AI SDK Elements / Streamdown exact styles */
+
+  /* Headings */
+  h1 {
+    margin-top: ${({ theme }) => theme.spacing(6)};
+    margin-bottom: ${({ theme }) => theme.spacing(2)};
+    font-weight: 600;
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+
+    &:first-child {
+      margin-top: 0;
+    }
   }
 
+  h2 {
+    margin-top: ${({ theme }) => theme.spacing(6)};
+    margin-bottom: ${({ theme }) => theme.spacing(2)};
+    font-weight: 600;
+    font-size: 1.5rem;
+    line-height: 2rem;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  h3 {
+    margin-top: ${({ theme }) => theme.spacing(6)};
+    margin-bottom: ${({ theme }) => theme.spacing(2)};
+    font-weight: 600;
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  h4 {
+    margin-top: ${({ theme }) => theme.spacing(6)};
+    margin-bottom: ${({ theme }) => theme.spacing(2)};
+    font-weight: 600;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  h5 {
+    margin-top: ${({ theme }) => theme.spacing(6)};
+    margin-bottom: ${({ theme }) => theme.spacing(2)};
+    font-weight: 600;
+    font-size: 1rem;
+    line-height: 1.5rem;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  h6 {
+    margin-top: ${({ theme }) => theme.spacing(6)};
+    margin-bottom: ${({ theme }) => theme.spacing(2)};
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  /* Paragraphs */
+  p {
+    margin: 0;
+
+    & + p {
+      margin-top: ${({ theme }) => theme.spacing(4)};
+    }
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  /* Lists */
   ul, ol {
-    margin: 8px 0;
-    padding-left: 20px;
+    margin-left: ${({ theme }) => theme.spacing(4)};
+    list-style-position: outside;
+    white-space: normal;
+    margin-top: 0;
+    margin-bottom: 0;
+
+    & + p {
+      margin-top: ${({ theme }) => theme.spacing(4)};
+    }
+  }
+
+  ul {
+    list-style-type: disc;
+  }
+
+  ol {
+    list-style-type: decimal;
   }
 
   li {
-    margin: 4px 0;
+    padding-top: ${({ theme }) => theme.spacing(1)};
+    padding-bottom: ${({ theme }) => theme.spacing(1)};
   }
 
   code {
