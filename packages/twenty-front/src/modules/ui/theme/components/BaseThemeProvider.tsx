@@ -1,8 +1,11 @@
 import { ThemeProvider } from '@emotion/react';
-import { createContext } from 'react';
+import { createContext, useMemo } from 'react';
 
 import { persistedColorSchemeState } from '@/ui/theme/states/persistedColorSchemeState';
-import { useRecoilState } from 'recoil';
+import { persistedFontSizeState } from '@/ui/theme/states/persistedFontSizeState';
+import { applyFontSizeScale } from '@/ui/theme/utils/applyFontSizeScale';
+import { getFontSizeMultiplier } from '@/ui/theme/utils/getFontSizeMultiplier';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { type ColorScheme } from 'twenty-ui/input';
 import { THEME_DARK, THEME_LIGHT, ThemeContextProvider } from 'twenty-ui/theme';
 
@@ -18,10 +21,18 @@ export const BaseThemeProvider = ({ children }: BaseThemeProviderProps) => {
   const [persistedColorScheme, setPersistedColorScheme] = useRecoilState(
     persistedColorSchemeState,
   );
+  const persistedFontSize = useRecoilValue(persistedFontSizeState);
+
   document.documentElement.className =
     persistedColorScheme === 'Dark' ? 'dark' : 'light';
 
-  const theme = persistedColorScheme === 'Dark' ? THEME_DARK : THEME_LIGHT;
+  const baseTheme = persistedColorScheme === 'Dark' ? THEME_DARK : THEME_LIGHT;
+  const fontSizeMultiplier = getFontSizeMultiplier(persistedFontSize);
+
+  const theme = useMemo(
+    () => applyFontSizeScale(baseTheme, fontSizeMultiplier),
+    [baseTheme, fontSizeMultiplier],
+  );
 
   return (
     <ThemeSchemeContext.Provider value={setPersistedColorScheme}>
