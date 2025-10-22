@@ -14,6 +14,7 @@ import { AppPath } from 'twenty-shared/types';
 import { useLingui } from '@lingui/react/macro';
 import { useRecoilValue } from 'recoil';
 import { IconFileText } from 'twenty-ui/display';
+import { useDocumentsDrawer } from '@/documents/hooks/useDocumentsDrawer';
 
 const ORDERED_STANDARD_OBJECTS: string[] = [
   CoreObjectNameSingular.Person,
@@ -39,6 +40,7 @@ export const NavigationDrawerSectionForObjectMetadataItems = ({
   const { t } = useLingui();
   const location = useLocation();
   const currentPath = location.pathname;
+  const { isDocumentsDrawerOpen, toggleDocumentsDrawer } = useDocumentsDrawer();
 
   const { objectPermissionsByObjectMetadataId } = useObjectPermissions();
 
@@ -134,14 +136,13 @@ export const NavigationDrawerSectionForObjectMetadataItems = ({
                 !isRemote &&
                 objectMetadataItem.nameSingular === CoreObjectNameSingular.Workflow
               ) {
-                const isDocumentsActive = currentPath === AppPath.DocumentsPage;
                 items.push(
                   <NavigationDrawerItem
                     key="navigation-drawer-item-documents"
                     label={t`Documents`}
                     Icon={IconFileText}
-                    to={AppPath.DocumentsPage}
-                    active={isDocumentsActive}
+                    onClick={toggleDocumentsDrawer}
+                    active={isDocumentsDrawerOpen}
                   />
                 );
               }
