@@ -1,8 +1,7 @@
 import styled from '@emotion/styled';
 import { IconPaperclip, IconChevronDown, IconSend, IconPlus, IconCheck, IconCopy, IconSearch, IconX, IconWorld } from 'twenty-ui/display';
 import { useState, useRef, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import Markdown from 'markdown-to-jsx';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useFindManyRecords } from '@/object-record/hooks/useFindManyRecords';
@@ -53,9 +52,9 @@ const StyledMessageContent = styled.div<{ role: 'user' | 'assistant' }>`
     background: ${theme.color.blue};
     color: white;
   ` : `
-    background: ${theme.background.secondary};
+    background: transparent;
     color: ${theme.font.color.primary};
-    border: 1px solid ${theme.border.color.medium};
+    border: none;
     padding-right: 48px;
   `}
 
@@ -1061,9 +1060,9 @@ export const AssistantChatbot = () => {
                       )}
                     </StyledCopyButton>
                   )}
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <Markdown>
                     {getMessageText(message)}
-                  </ReactMarkdown>
+                  </Markdown>
                 </>
               ) : (
                 getMessageText(message)

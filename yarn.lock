@@ -34890,6 +34890,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"markdown-to-jsx@npm:^7.7.16":
+  version: 7.7.16
+  resolution: "markdown-to-jsx@npm:7.7.16"
+  peerDependencies:
+    react: ">= 0.14.0"
+  peerDependenciesMeta:
+    react:
+      optional: true
+  checksum: 10c0/42d8b2249f5c4ba628e33181884445d9d97705ef841d49abb7fbc361f2159330c6587adaab38bdee3521214fe0839e5382beca63b32eebc7459ae9ed01916953
+  languageName: node
+  linkType: hard
+
 "marked@npm:7.0.4":
   version: 7.0.4
   resolution: "marked@npm:7.0.4"
@@ -44594,6 +44606,7 @@ __metadata:
     js-cookie: "npm:^3.0.5"
     json-2-csv: "npm:^5.4.0"
     jwt-decode: "npm:^4.0.0"
+    markdown-to-jsx: "npm:^7.7.16"
     monaco-editor: "npm:^0.51.0"
     monaco-editor-auto-typings: "npm:^0.4.5"
     optionator: "npm:^0.9.1"
@@ -44610,14 +44623,12 @@ __metadata:
     react-imask: "npm:^7.6.0"
     react-intersection-observer: "npm:^9.15.1"
     react-loading-skeleton: "npm:^3.3.1"
-    react-markdown: "npm:^10.1.0"
     react-phone-number-input: "patch:react-phone-number-input@npm%3A3.4.5#../../.yarn/patches/react-phone-number-input-npm-3.4.5-dc2895c306.patch"
     react-qr-code: "npm:^2.0.18"
     react-responsive: "npm:^9.0.2"
     react-router-dom: "npm:^6.4.4"
     react-textarea-autosize: "npm:^8.4.1"
     recoil: "npm:^0.7.7"
-    remark-gfm: "npm:^4.0.1"
     rollup-plugin-visualizer: "npm:^5.14.0"
     streamdown: "npm:^1.4.0"
     tailwindcss: "npm:^4.1.14"
