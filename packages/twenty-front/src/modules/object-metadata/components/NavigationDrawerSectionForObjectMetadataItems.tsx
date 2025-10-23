@@ -17,10 +17,10 @@ import { IconFileText } from 'twenty-ui/display';
 import { useDocumentsDrawer } from '@/documents/hooks/useDocumentsDrawer';
 
 const ORDERED_STANDARD_OBJECTS: string[] = [
-  CoreObjectNameSingular.Person,
-  CoreObjectNameSingular.Company,
-  CoreObjectNameSingular.Task,
   CoreObjectNameSingular.Workflow,
+  CoreObjectNameSingular.Company,
+  CoreObjectNameSingular.Person,
+  CoreObjectNameSingular.Task,
 ];
 
 type NavigationDrawerSectionForObjectMetadataItemsProps = {
@@ -104,19 +104,12 @@ export const NavigationDrawerSectionForObjectMetadataItems = ({
             (objectMetadataItem, index) => {
               const items = [];
 
-              // Render the current object metadata item
-              items.push(
-                <NavigationDrawerItemForObjectMetadataItem
-                  key={`navigation-drawer-item-${objectMetadataItem.id}`}
-                  objectMetadataItem={objectMetadataItem}
-                />
-              );
-
-              // If this is the Company item and we're in the Workspace section (not Remote),
-              // inject the Assistant item right after it
+              // If this is the Workflow item and we're in the Workspace section (not Remote),
+              // inject the Assistant item right before it
               if (
                 !isRemote &&
-                objectMetadataItem.nameSingular === CoreObjectNameSingular.Company
+                objectMetadataItem.nameSingular === CoreObjectNameSingular.Workflow &&
+                index === 0
               ) {
                 const isAssistantActive = currentPath === AppPath.AssistantPage;
                 items.push(
@@ -130,11 +123,19 @@ export const NavigationDrawerSectionForObjectMetadataItems = ({
                 );
               }
 
-              // If this is the Workflow item and we're in the Workspace section (not Remote),
+              // Render the current object metadata item
+              items.push(
+                <NavigationDrawerItemForObjectMetadataItem
+                  key={`navigation-drawer-item-${objectMetadataItem.id}`}
+                  objectMetadataItem={objectMetadataItem}
+                />
+              );
+
+              // If this is the Task item and we're in the Workspace section (not Remote),
               // inject the Documents item right after it
               if (
                 !isRemote &&
-                objectMetadataItem.nameSingular === CoreObjectNameSingular.Workflow
+                objectMetadataItem.nameSingular === CoreObjectNameSingular.Task
               ) {
                 items.push(
                   <NavigationDrawerItem
