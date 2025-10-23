@@ -33,13 +33,14 @@ type SelectedItem = {
   logo?: string;
 };
 
-const StyledChatContainer = styled.div`
+const StyledChatContainer = styled.div<{ $isCardView?: boolean }>`
   display: flex;
   flex-direction: column;
   height: 100%;
   width: 100%;
-  max-width: 900px;
+  max-width: ${({ $isCardView }) => $isCardView ? '100%' : '900px'};
   margin: 0 auto;
+  position: ${({ $isCardView }) => $isCardView ? 'relative' : 'static'};
 `;
 
 const StyledMessagesContainer = styled.div`
@@ -266,14 +267,16 @@ const StyledSparkleIcon = styled.svg`
   color: #ffffff;
 `;
 
-const StyledInputContainer = styled.div<{ $isConversationMode?: boolean }>`
-  padding: ${({ $isConversationMode }) => $isConversationMode ? '4px' : '4px 4px 60px 4px'};
-  background: ${({ theme }) => `${theme.background.tertiary}80`};
+const StyledInputContainer = styled.div<{ $isConversationMode?: boolean; $isCardView?: boolean }>`
+  padding: ${({ $isConversationMode, $isCardView }) =>
+    $isCardView ? '0' : ($isConversationMode ? '4px' : '4px 4px 60px 4px')};
+  background: ${({ theme, $isCardView }) =>
+    $isCardView ? 'transparent' : `${theme.background.tertiary}80`};
   margin: 0;
   border-radius: 12px;
   border: none;
 
-  ${({ $isConversationMode }) => $isConversationMode && `
+  ${({ $isConversationMode, $isCardView }) => $isConversationMode && !$isCardView && `
     position: fixed;
     bottom: 24px;
     left: 50%;
@@ -281,6 +284,10 @@ const StyledInputContainer = styled.div<{ $isConversationMode?: boolean }>`
     max-width: 800px;
     z-index: 100;
     border-radius: 12px;
+  `}
+
+  ${({ $isCardView }) => $isCardView && `
+    width: 100%;
   `}
 `;
 
@@ -903,7 +910,11 @@ const SUGGESTIONS = [
   },
 ];
 
-export const AssistantChatbot = () => {
+type AssistantChatbotProps = {
+  isCardView?: boolean;
+};
+
+export const AssistantChatbot = ({ isCardView = false }: AssistantChatbotProps) => {
   // Get current user for greeting
   const currentUser = useRecoilValue(currentUserState);
   const firstName = currentUser?.firstName || 'there';
@@ -950,7 +961,8 @@ export const AssistantChatbot = () => {
   const [files, setFiles] = useState<any[]>([]);
 
   // Track if conversation has started (for layout transition)
-  const hasStartedConversation = messages.length > 0;
+  // In card view, always show the conversation mode (no greeting, suggestions, or previous chats)
+  const hasStartedConversation = isCardView || messages.length > 0;
 
   // Mock previous chat history
   const mockChatHistory = [
@@ -1165,7 +1177,7 @@ export const AssistantChatbot = () => {
   return (
     <>
       <GlobalFonts />
-      <StyledChatContainer>
+      <StyledChatContainer $isCardView={isCardView}>
         {/* Greeting Section - Only show before conversation starts */}
         {!hasStartedConversation && (
           <StyledGreetingSection>
@@ -1273,7 +1285,11 @@ export const AssistantChatbot = () => {
         )}
 
       {/* Input Section with Container */}
-      <StyledInputContainer $isConversationMode={hasStartedConversation} style={{ position: 'relative' }}>
+      <StyledInputContainer
+        $isConversationMode={hasStartedConversation}
+        $isCardView={isCardView}
+        style={{ position: 'relative' }}
+      >
         <form onSubmit={handleSubmit}>
         <StyledInputWrapper>
           {selectedItems.length > 0 && (
