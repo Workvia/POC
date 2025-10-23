@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { IconPaperclip, IconChevronDown, IconSend, IconPlus, IconCheck, IconCopy, IconSearch, IconX, IconWorld } from 'twenty-ui/display';
+import { IconPaperclip, IconChevronDown, IconSend, IconPlus, IconCheck, IconCopy, IconSearch, IconX, IconWorld, IconSparkles, IconFileText } from 'twenty-ui/display';
 import { useState, useRef, useEffect } from 'react';
 import Markdown from 'markdown-to-jsx';
 import { useChat } from '@ai-sdk/react';
@@ -7,6 +7,24 @@ import { DefaultChatTransport } from 'ai';
 import { useFindManyRecords } from '@/object-record/hooks/useFindManyRecords';
 import { getLogoUrlFromDomainName } from 'twenty-shared/utils';
 import { getCompanyDomainName } from '@/object-metadata/utils/getCompanyDomainName';
+import { useRecoilValue } from 'recoil';
+import { currentUserState } from '@/auth/states/currentUserState';
+import { Global, css } from '@emotion/react';
+
+// Font face declaration for StageGrotesk-Medium
+const GlobalFonts = () => (
+  <Global
+    styles={css`
+      @font-face {
+        font-family: 'Stage Grotesk';
+        src: url('/fonts/StageGrotesk-Medium.woff2') format('woff2');
+        font-weight: 500;
+        font-style: normal;
+        font-display: swap;
+      }
+    `}
+  />
+);
 
 type SelectedItem = {
   id: string;
@@ -214,15 +232,37 @@ const StyledMessageHeader = styled.div`
   padding: 0 4px;
 `;
 
+// New components for redesigned layout
+const StyledGreetingSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 0 24px 0;
+`;
+
+const StyledGreetingText = styled.h1`
+  font-family: 'Stage Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.font.color.primary};
+  margin: 100px 0 0 0;
+`;
+
+const StyledInputContainer = styled.div`
+  padding: 4px 4px 60px 4px;
+  background: ${({ theme }) => `${theme.background.tertiary}80`};
+  margin: 0;
+  border-radius: 12px;
+`;
+
 const StyledInputWrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: ${({ theme }) => theme.background.tertiary};
+  background: ${({ theme }) => theme.background.primary};
   border: 1px solid ${({ theme }) => theme.border.color.medium};
   border-radius: 12px;
   padding: 16px 16px 10px 16px;
-  margin: 16px 24px 12px 24px;
 `;
 
 const StyledInputArea = styled.textarea`
@@ -255,6 +295,108 @@ const StyledLeftButtons = styled.div`
   gap: 8px;
 `;
 
+const StyledSuggestionsContainer = styled.div`
+  position: absolute;
+  bottom: 8px;
+  left: 4px;
+  right: 4px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 4px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  scrollbar-width: none;
+`;
+
+const StyledSuggestionChip = styled.button`
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  background: ${({ theme }) => theme.background.primary};
+  border: 1px solid ${({ theme }) => theme.border.color.medium};
+  border-radius: 50px;
+  color: ${({ theme }) => theme.font.color.secondary};
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+
+  &:hover {
+    background: ${({ theme }) => theme.background.transparent.medium};
+    border-color: ${({ theme }) => theme.border.color.strong};
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+`;
+
+const StyledChatHistoryContainer = styled.div`
+  flex: 1;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  overflow-y: auto;
+  padding: 24px;
+  border-top: 1px solid ${({ theme }) => theme.border.color.medium};
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+const StyledPreviousChatsSection = styled.div`
+  width: 100%;
+  margin: 24px 0 0 0;
+`;
+
+const StyledPreviousChatsHeader = styled.h2`
+  font-size: 16px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.font.color.primary};
+  margin: 80px 0 16px 0;
+`;
+
+const StyledPreviousChatsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const StyledPreviousChatItem = styled.div`
+  padding: 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: 1px solid ${({ theme }) => theme.border.color.medium};
+  border-radius: 12px;
+
+  &:hover {
+    background: ${({ theme }) => theme.background.transparent.light};
+  }
+`;
+
+const StyledChatTitle = styled.div`
+  font-size: 14px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.font.color.primary};
+  margin-bottom: 4px;
+`;
+
+const StyledChatTimestamp = styled.div`
+  font-size: 13px;
+  color: ${({ theme }) => theme.font.color.tertiary};
+`;
+
 const StyledButton = styled.button`
   display: flex;
   align-items: center;
@@ -262,7 +404,7 @@ const StyledButton = styled.button`
   gap: 6px;
   height: 32px;
   padding: 0 14px;
-  background: ${({ theme }) => theme.background.transparent.light};
+  background: ${({ theme }) => theme.background.primary};
   border: 1px solid ${({ theme }) => theme.border.color.medium};
   border-radius: 50px;
   color: ${({ theme }) => theme.font.color.secondary};
@@ -368,38 +510,6 @@ const StyledShimmerLine = styled.div<{ width: string }>`
     100% {
       background-position: 200% 0;
     }
-  }
-`;
-
-const StyledSuggestionsContainer = styled.div`
-  padding: 0 24px 16px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-`;
-
-const StyledSuggestionChip = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: ${({ theme }) => theme.background.transparent.light};
-  border: 1px solid ${({ theme }) => theme.border.color.medium};
-  border-radius: 20px;
-  color: ${({ theme }) => theme.font.color.secondary};
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background: ${({ theme }) => theme.background.secondary};
-    border-color: ${({ theme }) => theme.color.blue};
-    color: ${({ theme }) => theme.color.blue};
-    transform: translateY(-1px);
-  }
-
-  &:active {
-    transform: translateY(0);
   }
 `;
 
@@ -765,6 +875,18 @@ const SUGGESTIONS = [
 ];
 
 export const AssistantChatbot = () => {
+  // Get current user for greeting
+  const currentUser = useRecoilValue(currentUserState);
+  const firstName = currentUser?.firstName || 'there';
+
+  // Determine greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   // Use AI SDK useChat hook with proper transport and protocol
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
@@ -797,6 +919,25 @@ export const AssistantChatbot = () => {
   const [webSearch, setWebSearch] = useState(false);
   const [appsAndIntegrations, setAppsAndIntegrations] = useState(false);
   const [files, setFiles] = useState<any[]>([]);
+
+  // Mock previous chat history
+  const mockChatHistory = [
+    {
+      id: '1',
+      title: 'Prompt review strategy',
+      lastMessage: '3 hours ago',
+    },
+    {
+      id: '2',
+      title: 'Enterprise PostgreSQL database solutions',
+      lastMessage: '15 hours ago',
+    },
+    {
+      id: '3',
+      title: 'AI table view feature overview',
+      lastMessage: '2 days ago',
+    },
+  ];
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -990,101 +1131,17 @@ export const AssistantChatbot = () => {
   };
 
   return (
-    <StyledChatContainer>
-      <StyledMessagesContainer>
-        {messages.map((message) => (
-          <StyledMessage key={message.id} role={message.role}>
-            <StyledMessageHeader>
-              {message.role === 'user' ? 'You' : 'AI Assistant'}
-            </StyledMessageHeader>
+    <>
+      <GlobalFonts />
+      <StyledChatContainer>
+        {/* Greeting Section */}
+      <StyledGreetingSection>
+        <StyledGreetingText>{getGreeting()}, {firstName}</StyledGreetingText>
+      </StyledGreetingSection>
 
-            {/* Reasoning Component - Show tool usage */}
-            {message.role === 'assistant' && message.reasoningSteps && message.reasoningSteps.length > 0 && (
-              <StyledReasoningContainer isExpanded={expandedReasoning.has(message.id)}>
-                <StyledReasoningHeader
-                  onClick={() => {
-                    setExpandedReasoning(prev => {
-                      const next = new Set(prev);
-                      if (next.has(message.id)) {
-                        next.delete(message.id);
-                      } else {
-                        next.add(message.id);
-                      }
-                      return next;
-                    });
-                  }}
-                >
-                  <span>🧠 Reasoning ({message.reasoningSteps.length} steps)</span>
-                  <IconChevronDown
-                    size={16}
-                    style={{
-                      transform: expandedReasoning.has(message.id) ? 'rotate(180deg)' : 'rotate(0deg)',
-                      transition: 'transform 0.2s',
-                    }}
-                  />
-                </StyledReasoningHeader>
-                {expandedReasoning.has(message.id) && (
-                  <StyledReasoningContent>
-                    {message.reasoningSteps.map((step, idx) => (
-                      <StyledReasoningStep key={idx}>
-                        <span>{step}</span>
-                      </StyledReasoningStep>
-                    ))}
-                  </StyledReasoningContent>
-                )}
-              </StyledReasoningContainer>
-            )}
-
-            <StyledMessageContent role={message.role}>
-              {message.role === 'assistant' ? (
-                <>
-                  {/* Copy Button - Top Right Corner */}
-                  {getMessageText(message) && (
-                    <StyledCopyButton
-                      copied={copiedMessageId === message.id}
-                      data-tooltip={copiedMessageId === message.id ? 'Copied!' : 'Copy'}
-                      onClick={async () => {
-                        try {
-                          await navigator.clipboard.writeText(getMessageText(message));
-                          setCopiedMessageId(message.id);
-                          setTimeout(() => setCopiedMessageId(null), 2000);
-                        } catch (err) {
-                          console.error('Failed to copy:', err);
-                        }
-                      }}
-                    >
-                      {copiedMessageId === message.id ? (
-                        <IconCheck size={16} />
-                      ) : (
-                        <IconCopy size={16} />
-                      )}
-                    </StyledCopyButton>
-                  )}
-                  <Markdown>
-                    {getMessageText(message)}
-                  </Markdown>
-                </>
-              ) : (
-                getMessageText(message)
-              )}
-            </StyledMessageContent>
-          </StyledMessage>
-        ))}
-
-        {isLoading && (
-          <StyledMessage role="assistant">
-            <StyledMessageHeader>AI Assistant</StyledMessageHeader>
-            <StyledShimmer>
-              <StyledShimmerLine width="90%" />
-              <StyledShimmerLine width="75%" />
-              <StyledShimmerLine width="85%" />
-            </StyledShimmer>
-          </StyledMessage>
-        )}
-        <div ref={messagesEndRef} />
-      </StyledMessagesContainer>
-
-      <form onSubmit={handleSubmit}>
+      {/* Input Section with Container */}
+      <StyledInputContainer style={{ position: 'relative' }}>
+        <form onSubmit={handleSubmit}>
         <StyledInputWrapper>
           {selectedItems.length > 0 && (
             <StyledChipsContainer>
@@ -1195,7 +1252,162 @@ export const AssistantChatbot = () => {
             </StyledSendButton>
           </StyledButtonRow>
         </StyledInputWrapper>
-      </form>
-    </StyledChatContainer>
+        </form>
+
+        {/* Suggestion Prompts */}
+        <StyledSuggestionsContainer>
+          <StyledSuggestionChip
+            onClick={() => {
+              setInput('Compare policies');
+            }}
+          >
+            <IconFileText size={14} />
+            Compare policies
+          </StyledSuggestionChip>
+          <StyledSuggestionChip
+            onClick={() => {
+              setInput('Proposal summary');
+            }}
+          >
+            <IconWorld size={14} />
+            Proposal summary
+          </StyledSuggestionChip>
+          <StyledSuggestionChip
+            onClick={() => {
+              setInput('Deep research');
+            }}
+          >
+            <IconPlus size={14} />
+            Deep research
+          </StyledSuggestionChip>
+          <StyledSuggestionChip
+            onClick={() => {
+              setInput('Find coverage');
+            }}
+          >
+            <IconSearch size={14} />
+            Find coverage
+          </StyledSuggestionChip>
+          <StyledSuggestionChip
+            onClick={() => {
+              setInput('Sources');
+            }}
+          >
+            <IconWorld size={14} />
+            Sources
+          </StyledSuggestionChip>
+        </StyledSuggestionsContainer>
+      </StyledInputContainer>
+
+      {/* Chat History Section */}
+      {messages.length > 0 && (
+        <StyledChatHistoryContainer>
+          {messages.map((message) => (
+            <StyledMessage key={message.id} role={message.role}>
+              <StyledMessageHeader>
+                {message.role === 'user' ? 'You' : 'AI Assistant'}
+              </StyledMessageHeader>
+
+              {/* Reasoning Component - Show tool usage */}
+              {message.role === 'assistant' && message.reasoningSteps && message.reasoningSteps.length > 0 && (
+                <StyledReasoningContainer isExpanded={expandedReasoning.has(message.id)}>
+                  <StyledReasoningHeader
+                    onClick={() => {
+                      setExpandedReasoning(prev => {
+                        const next = new Set(prev);
+                        if (next.has(message.id)) {
+                          next.delete(message.id);
+                        } else {
+                          next.add(message.id);
+                        }
+                        return next;
+                      });
+                    }}
+                  >
+                    <span>🧠 Reasoning ({message.reasoningSteps.length} steps)</span>
+                    <IconChevronDown
+                      size={16}
+                      style={{
+                        transform: expandedReasoning.has(message.id) ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s',
+                      }}
+                    />
+                  </StyledReasoningHeader>
+                  {expandedReasoning.has(message.id) && (
+                    <StyledReasoningContent>
+                      {message.reasoningSteps.map((step, idx) => (
+                        <StyledReasoningStep key={idx}>
+                          <span>{step}</span>
+                        </StyledReasoningStep>
+                      ))}
+                    </StyledReasoningContent>
+                  )}
+                </StyledReasoningContainer>
+              )}
+
+              <StyledMessageContent role={message.role}>
+                {message.role === 'assistant' ? (
+                  <>
+                    {/* Copy Button - Top Right Corner */}
+                    {getMessageText(message) && (
+                      <StyledCopyButton
+                        copied={copiedMessageId === message.id}
+                        data-tooltip={copiedMessageId === message.id ? 'Copied!' : 'Copy'}
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(getMessageText(message));
+                            setCopiedMessageId(message.id);
+                            setTimeout(() => setCopiedMessageId(null), 2000);
+                          } catch (err) {
+                            console.error('Failed to copy:', err);
+                          }
+                        }}
+                      >
+                        {copiedMessageId === message.id ? (
+                          <IconCheck size={16} />
+                        ) : (
+                          <IconCopy size={16} />
+                        )}
+                      </StyledCopyButton>
+                    )}
+                    <Markdown>
+                      {getMessageText(message)}
+                    </Markdown>
+                  </>
+                ) : (
+                  getMessageText(message)
+                )}
+              </StyledMessageContent>
+            </StyledMessage>
+          ))}
+
+          {isLoading && (
+            <StyledMessage role="assistant">
+              <StyledMessageHeader>AI Assistant</StyledMessageHeader>
+              <StyledShimmer>
+                <StyledShimmerLine width="90%" />
+                <StyledShimmerLine width="75%" />
+                <StyledShimmerLine width="85%" />
+              </StyledShimmer>
+            </StyledMessage>
+          )}
+          <div ref={messagesEndRef} />
+        </StyledChatHistoryContainer>
+      )}
+
+      {/* Previous Chats Section */}
+      <StyledPreviousChatsSection>
+        <StyledPreviousChatsHeader>Previous chats</StyledPreviousChatsHeader>
+        <StyledPreviousChatsList>
+          {mockChatHistory.map((chat) => (
+            <StyledPreviousChatItem key={chat.id}>
+              <StyledChatTitle>{chat.title}</StyledChatTitle>
+              <StyledChatTimestamp>Last message {chat.lastMessage}</StyledChatTimestamp>
+            </StyledPreviousChatItem>
+          ))}
+        </StyledPreviousChatsList>
+      </StyledPreviousChatsSection>
+      </StyledChatContainer>
+    </>
   );
 };
