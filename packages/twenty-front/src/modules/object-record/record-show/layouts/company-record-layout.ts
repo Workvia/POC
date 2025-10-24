@@ -32,6 +32,20 @@ export const COMPANY_RECORD_LAYOUT: RecordLayout = {
         ifRelationsMissing: [],
       },
     },
+    emails: {
+      title: 'Emails',
+      position: 600,
+      icon: 'IconMail',
+      cards: [{ type: CardType.EmailCard }],
+      hide: {
+        ifMobile: false,
+        ifDesktop: false,
+        ifInRightDrawer: false,
+        ifFeaturesDisabled: [],
+        ifRequiredObjectsInactive: [],
+        ifRelationsMissing: [],
+      },
+    },
     notes: null,
   },
 };
